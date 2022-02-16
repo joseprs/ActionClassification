@@ -4,6 +4,7 @@ import time
 from argparse import ArgumentParser
 from pathlib import Path
 
+
 import numpy as np
 from skimage.io import imread
 from tqdm import tqdm
@@ -78,15 +79,24 @@ if __name__ == '__main__':
                        
     group.add_argument('-f', '--sampling_freq',
                        help='Sampling frequency',
-                       default=2, type=lambda x: int(x)) # COMO SE HACE ESTO
+                       default=2, type=int)
                        
     group.add_argument('-w', '--window',
                        help='Window',
-                       default=10, type=lambda x: int(x))
+                       default=10, type=int)
+
+    parser.add_argument('--log_config', required=False,
+                        help='Logging configuration file (default: config/log_config.yml)',
+                        default="config/log_config.yml", type=lambda p: Path(p))
+
+    parser.add_argument('--logs_dir', required=False,
+                        help='Logging directory path (default: logs)',
+                        default="logs", type=lambda p: Path(p))
    
     args = parser.parse_args()
     # NO HAGO EL LOAD LOG CONFIGURATION
-
+    load_log_configuration(args.log_config, args.logs_dir)
+        
     if args.videos:
         with args.videos.open() as f:
             videos = [Path(line) for line in f.readlines()]
@@ -108,9 +118,9 @@ if __name__ == '__main__':
             frames_dir.mkdir(parents=True, exist_ok=True)
             logging.info(f'Extracting frames into {frames_dir}')
             subprocess.check_call(f'./scripts/extract_frames.sh "{str(video).strip()}" "{frames_dir}"', shell=True)
-    
+        
         num_frames = len(list(frames_dir.glob('*.jpg')))
-        logging.info(f'Number of frames to segment {num_frames}') # NO SE VISUALIZA ESTO
+        logging.info(f'Number of frames to segment {num_frames}')
         
         start = time.time()
         
