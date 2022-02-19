@@ -137,6 +137,6 @@ if __name__ == '__main__':
         an2 = annotations[index:]
         actions = [an1, an2]
 
-        detected_faces = detect_faces(frames_dir, match_path, actions[half], args.sampling_freq, args.window)
+        detected_faces = detect_faces(frames_dir, actions[half], args.sampling_freq, args.window)
         # np.save(face_detection_results_fpath, detected_faces)
         logging.info(f'Video processing time is {time.time() - start} seconds')
