@@ -4,7 +4,6 @@ import time
 from argparse import ArgumentParser
 from pathlib import Path
 
-
 import numpy as np
 from tqdm import tqdm
 
@@ -33,8 +32,7 @@ def first_last_frame(frame_num, seconds_window, fs):
     return f, l
 
 
-# -- DETECTA MAL LAS CARAS --
-def detect_faces(frames_dir, match_path, action_list, fs, seconds_window):
+def detect_faces(frames_dir, action_list, fs, seconds_window):
     faces = pd.DataFrame(
         columns=['face_locations', 'current_frame', 'action_frame', 'action_position', 'action_name', 'action_time',
                  'half'])
@@ -80,9 +78,8 @@ if __name__ == '__main__':
 
     group.add_argument('-f', '--sampling_freq',
                        help='Sampling frequency',
-<<<<<<< HEAD
-                       default=2, type=int)
-                       
+                       default=8, type=int)
+
     group.add_argument('-w', '--window',
                        help='Window',
                        default=10, type=int)
@@ -94,19 +91,11 @@ if __name__ == '__main__':
     parser.add_argument('--logs_dir', required=False,
                         help='Logging directory path (default: logs)',
                         default="logs", type=lambda p: Path(p))
-   
-=======
-                       default=2, type=lambda x: int(x))  # COMO SE HACE ESTO
 
-    group.add_argument('-w', '--window',
-                       help='Window',
-                       default=10, type=lambda x: int(x))
-
->>>>>>> 50ef5553c95dd1e033ddade0d38fe6ad942a958c
     args = parser.parse_args()
-    # NO HAGO EL LOAD LOG CONFIGURATION
+
     load_log_configuration(args.log_config, args.logs_dir)
-        
+
     if args.videos:
         with args.videos.open() as f:
             videos = [Path(line) for line in f.readlines()]
@@ -116,7 +105,6 @@ if __name__ == '__main__':
     for video in tqdm(videos, desc='Overall Progress', leave=True, position=0):
 
         half = int(video.stem[0]) - 1
-
         match_path = video.parent
         face_detection_results_fpath = match_path.joinpath(f'face_detection_results_{half + 1}_HQ.npy')
 
@@ -128,26 +116,21 @@ if __name__ == '__main__':
             frames_dir.mkdir(parents=True, exist_ok=True)
             logging.info(f'Extracting frames into {frames_dir}')
             subprocess.check_call(f'./scripts/extract_frames.sh "{str(video).strip()}" "{frames_dir}"', shell=True)
-<<<<<<< HEAD
-        
+
         num_frames = len(list(frames_dir.glob('*.jpg')))
         logging.info(f'Number of frames to segment {num_frames}')
-        
-=======
 
         num_frames = len(list(frames_dir.glob('*.jpg')))
         logging.info(f'Number of frames to segment {num_frames}')  # NO SE VISUALIZA ESTO
 
->>>>>>> 50ef5553c95dd1e033ddade0d38fe6ad942a958c
         start = time.time()
 
-        # JOSEP FREESTYLE
         json_path = match_path.joinpath('Labels-v2.json')
         with open(json_path) as f:
             data = json.load(f)
         annotations = data['annotations']
         for i in range(0, len(annotations)):
-            if (annotations[i]['gameTime'][0] == '2'):
+            if annotations[i]['gameTime'][0] == '2':
                 index = i
                 break
         an1 = annotations[:index]
