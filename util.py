@@ -1,8 +1,11 @@
 import logging.config
 from datetime import datetime
 from pathlib import Path
+<<<<<<< HEAD
 import yaml
 
+=======
+>>>>>>> c06e396b5986d0976ff35aaedc1e458a1a7b8475
 
 def load_log_configuration(log_config: Path, logs_dir: Path, log_fname_format='%Y-%m-%d_%H-%M-%S.log'):
     log_fname = datetime.now().strftime(log_fname_format)
