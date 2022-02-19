@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="SshConfigs">
+    <configs>
+      <sshConfig authType="PASSWORD" connectionConfig="{&quot;serverAliveInterval&quot;:300}" host="10.80.30.62" id="d2b3b376-80b7-4d7b-9a9f-578d125292a1" port="22" customName="Corsair Connection" nameFormat="CUSTOM" username="josep" useOpenSSHConfig="true">
+        <option name="customName" value="Corsair Connection" />
+      </sshConfig>
+    </configs>
+  </component>
+</project>
