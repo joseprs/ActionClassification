@@ -32,7 +32,8 @@ def first_last_frame(frame_num, seconds_window, fs):
     return f, l
 
 
-def detect_faces(frames_dir, action_list, fs, seconds_window):
+def detect_faces(directory, action_list, fs, seconds_window):
+
     faces = pd.DataFrame(
         columns=['face_locations', 'current_frame', 'action_frame', 'action_position', 'action_name', 'action_time',
                  'half'])
@@ -40,7 +41,7 @@ def detect_faces(frames_dir, action_list, fs, seconds_window):
     detector = FaceDetector.build_model(detector_name)
 
     # going action by action
-    for action in tqdm(action_list[1:], desc='Actions Faces Detection', leave=True, position=0):
+    for action in tqdm(action_list[1:3], desc='Actions Faces Detection', leave=True, position=0):
 
         position = int(action['position'])
         frame_num = get_frame(position, fs)
@@ -48,18 +49,25 @@ def detect_faces(frames_dir, action_list, fs, seconds_window):
 
         # going frame by frame inside the action
         for i in range(first_action_frame, last_action_frame):
-            frame_path = frames_dir.joinpath(f'{i:05}' + '.jpg')
+            frame_path = directory.joinpath(f'{i:05}' + '.jpg')
             image = io.imread(frame_path)
             face_loc = FaceDetector.detect_faces(detector, detector_name, image)
             array = np.array(face_loc)
             face_locations = []
             for arr in array:
                 face_locations.append(arr[1])
-            print(i)
-            print(face_locations)
 
-    print(first_action_frame)
-    return action_list
+            if len(face_locations) > 0:
+                faces = faces.append({'face_locations': face_locations, 'current_frame': i, 'action_frame': frame_num,
+                                      'action_position': position, 'action_name': action['label'],
+                                      'action_time': action['gameTime'],
+                                      'half': half + 1}, ignore_index=True)
+
+        information_file = open("information.txt", "a")
+        information_file.write(action['gameTime']+' - '+action['label']+ '\n')
+        information_file.close()
+
+    return faces
 
 
 if __name__ == '__main__':
@@ -111,7 +119,7 @@ if __name__ == '__main__':
         if face_detection_results_fpath.exists():
             continue
 
-        frames_dir = match_path.joinpath(f'{half + 1}_HQ', 'frames')
+        frames_dir = match_path.joinpath(f'{half + 1}_HQ', 'frames8fps')
         if not frames_dir.exists():
             frames_dir.mkdir(parents=True, exist_ok=True)
             logging.info(f'Extracting frames into {frames_dir}')
@@ -119,9 +127,6 @@ if __name__ == '__main__':
 
         num_frames = len(list(frames_dir.glob('*.jpg')))
         logging.info(f'Number of frames to segment {num_frames}')
-
-        num_frames = len(list(frames_dir.glob('*.jpg')))
-        logging.info(f'Number of frames to segment {num_frames}')  # NO SE VISUALIZA ESTO
 
         start = time.time()
 
@@ -137,6 +142,19 @@ if __name__ == '__main__':
         an2 = annotations[index:]
         actions = [an1, an2]
 
+        information_file = open("information.txt", "w")
+        information_file.write(str(match_path)+'\n\n')
+        information_file.close()
+
         detected_faces = detect_faces(frames_dir, actions[half], args.sampling_freq, args.window)
-        # np.save(face_detection_results_fpath, detected_faces)
         logging.info(f'Video processing time is {time.time() - start} seconds')
+
+        # saving the results
+        np.save('save_test', detected_faces)
+        detected_faces.to_json('save_test(json).json', orient='records')
+
+        # saving to the information file
+        information_file = open("information.txt", "a")
+        information_file.write(f'Video processing time is {time.time() - start} seconds')
+        information_file.close()
+
