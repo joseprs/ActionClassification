@@ -41,7 +41,7 @@ def detect_faces(directory, action_list, fs, seconds_window):
     detector = FaceDetector.build_model(detector_name)
 
     # going action by action
-    for action in tqdm(action_list[1:3], desc='Actions Faces Detection', leave=True, position=0):
+    for action in tqdm(action_list[1:], desc='Actions Faces Detection', leave=True, position=0):
 
         position = int(action['position'])
         frame_num = get_frame(position, fs)
