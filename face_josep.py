@@ -32,7 +32,7 @@ def first_last_frame(frame_num, seconds_window, fs):
     return f, l
 
 
-def detect_faces(directory, action_list, fs, seconds_window):
+def detect_faces(directory, action_list, fs, seconds_window, text_path):
 
     faces = pd.DataFrame(
         columns=['face_locations', 'current_frame', 'action_frame', 'action_position', 'action_name', 'action_time',
@@ -63,7 +63,7 @@ def detect_faces(directory, action_list, fs, seconds_window):
                                       'action_time': action['gameTime'],
                                       'half': half + 1}, ignore_index=True)
 
-        information_file = open("information.txt", "a")
+        information_file = open('information.txt', "a")
         information_file.write(action['gameTime']+' - '+action['label']+ '\n')
         information_file.close()
 
@@ -115,11 +115,12 @@ if __name__ == '__main__':
         half = int(video.stem[0]) - 1
         match_path = video.parent
         face_detection_results_fpath = match_path.joinpath(f'face_detection_results_{half + 1}_HQ.npy')
+        face_detection_results_fpath_json = match_path.joinpath(f'face_detection_results_{half + 1}_HQ.json')
 
         if face_detection_results_fpath.exists():
             continue
 
-        frames_dir = match_path.joinpath(f'{half + 1}_HQ', 'frames8fps')
+        frames_dir = match_path.joinpath(f'{half + 1}_HQ', 'frames')
         if not frames_dir.exists():
             frames_dir.mkdir(parents=True, exist_ok=True)
             logging.info(f'Extracting frames into {frames_dir}')
@@ -142,19 +143,21 @@ if __name__ == '__main__':
         an2 = annotations[index:]
         actions = [an1, an2]
 
-        information_file = open("information.txt", "w")
+        information_file = open('information.txt', "w")
         information_file.write(str(match_path)+'\n\n')
         information_file.close()
 
-        detected_faces = detect_faces(frames_dir, actions[half], args.sampling_freq, args.window)
+        detected_faces = detect_faces(frames_dir, actions[half], args.sampling_freq, args.window, txt_path)
         logging.info(f'Video processing time is {time.time() - start} seconds')
 
         # saving the results
-        np.save('save_test', detected_faces)
-        detected_faces.to_json('save_test(json).json', orient='records')
+        np.save('detections', detected_faces)
+        detected_faces.to_json('detections(json).json', orient='records')
+        np.save(face_detection_results_fpath, detected_faces)
+        detected_faces.to_json(face_detection_results_fpath_json, orient='records')
 
         # saving to the information file
-        information_file = open("information.txt", "a")
+        information_file = open('information.txt', "a")
         information_file.write(f'Video processing time is {time.time() - start} seconds')
         information_file.close()
 
