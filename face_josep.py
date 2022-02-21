@@ -7,29 +7,12 @@ from pathlib import Path
 import numpy as np
 from tqdm import tqdm
 
-from util import load_log_configuration
+from util import load_log_configuration, get_frame, first_last_frame
 import os
 import json
 import pandas as pd
 from deepface.detectors import FaceDetector
 from skimage import io
-
-
-def get_frame(position, fs):
-    return (position // 1000) * fs
-
-
-def first_last_frame(frame_num, seconds_window, fs):
-    if frame_num - (seconds_window * fs) > 0:
-        f = frame_num - (seconds_window * fs)
-    else:
-        f = 1
-    if frame_num + (seconds_window * fs) > len(os.listdir(frames_dir)):
-        l = len(os.listdir(frames_dir))
-    else:
-        l = frame_num + (seconds_window * fs)
-
-    return f, l
 
 
 def detect_faces(directory, action_list, fs, seconds_window):
@@ -45,7 +28,7 @@ def detect_faces(directory, action_list, fs, seconds_window):
 
         position = int(action['position'])
         frame_num = get_frame(position, fs)
-        first_action_frame, last_action_frame = first_last_frame(frame_num, seconds_window, fs)
+        first_action_frame, last_action_frame = first_last_frame(frame_num, seconds_window, fs, directory)
 
         # going frame by frame inside the action
         for i in range(first_action_frame, last_action_frame):
