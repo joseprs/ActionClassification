@@ -1,0 +1,115 @@
+/mnt/DATA/datasets/soccernet/italy_serie-a/2016-2017/2016-11-27 - 22-45 AS Roma 3 - 2 Pescara
+
+1 - 01:28 - Foul
+1 - 01:36 - Indirect free-kick
+1 - 02:02 - Ball out of play
+1 - 03:01 - Throw-in
+1 - 03:14 - Ball out of play
+1 - 03:29 - Throw-in
+1 - 03:36 - Ball out of play
+1 - 03:40 - Throw-in
+1 - 04:34 - Ball out of play
+1 - 04:44 - Substitution
+1 - 05:03 - Clearance
+1 - 05:16 - Shots off target
+1 - 05:19 - Ball out of play
+1 - 05:37 - Clearance
+1 - 06:13 - Ball out of play
+1 - 06:33 - Corner
+1 - 06:37 - Shots on target
+1 - 06:37 - Goal
+1 - 07:21 - Kick-off
+1 - 08:16 - Foul
+1 - 08:29 - Indirect free-kick
+1 - 09:05 - Foul
+1 - 09:16 - Indirect free-kick
+1 - 09:54 - Shots on target
+1 - 09:55 - Goal
+1 - 10:41 - Kick-off
+1 - 11:58 - Foul
+1 - 12:21 - Indirect free-kick
+1 - 12:24 - Ball out of play
+1 - 12:38 - Throw-in
+1 - 14:21 - Ball out of play
+1 - 14:35 - Throw-in
+1 - 15:53 - Shots on target
+1 - 16:30 - Ball out of play
+1 - 16:44 - Throw-in
+1 - 16:47 - Foul
+1 - 17:41 - Direct free-kick
+1 - 17:44 - Ball out of play
+1 - 18:11 - Corner
+1 - 18:14 - Shots on target
+1 - 18:35 - Ball out of play
+1 - 18:39 - Throw-in
+1 - 20:06 - Shots on target
+1 - 20:46 - Shots off target
+1 - 20:48 - Ball out of play
+1 - 20:59 - Corner
+1 - 21:05 - Shots on target
+1 - 21:52 - Shots on target
+1 - 22:07 - Foul
+1 - 22:18 - Indirect free-kick
+1 - 22:49 - Shots off target
+1 - 22:51 - Ball out of play
+1 - 23:15 - Corner
+1 - 23:37 - Shots on target
+1 - 23:48 - Ball out of play
+1 - 24:00 - Throw-in
+1 - 24:43 - Shots on target
+1 - 26:24 - Foul
+1 - 27:00 - Indirect free-kick
+1 - 27:22 - Shots on target
+1 - 27:24 - Shots on target
+1 - 27:25 - Ball out of play
+1 - 27:51 - Corner
+1 - 28:05 - Foul
+1 - 28:33 - Indirect free-kick
+1 - 29:34 - Foul
+1 - 29:46 - Indirect free-kick
+1 - 30:24 - Foul
+1 - 30:30 - Yellow card
+1 - 30:51 - Indirect free-kick
+1 - 31:06 - Ball out of play
+1 - 31:15 - Throw-in
+1 - 31:39 - Foul
+1 - 31:55 - Yellow card
+1 - 32:54 - Direct free-kick
+1 - 32:55 - Shots on target
+1 - 33:44 - Foul
+1 - 34:07 - Indirect free-kick
+1 - 34:11 - Ball out of play
+1 - 34:22 - Throw-in
+1 - 34:34 - Foul
+1 - 34:45 - Indirect free-kick
+1 - 35:27 - Offside
+1 - 35:34 - Indirect free-kick
+1 - 35:57 - Ball out of play
+1 - 36:02 - Throw-in
+1 - 36:42 - Ball out of play
+1 - 36:47 - Throw-in
+1 - 37:25 - Shots off target
+1 - 37:26 - Ball out of play
+1 - 37:48 - Clearance
+1 - 37:56 - Foul
+1 - 37:59 - Yellow card
+1 - 39:19 - Indirect free-kick
+1 - 39:47 - Ball out of play
+1 - 40:02 - Throw-in
+1 - 40:08 - Ball out of play
+1 - 40:20 - Throw-in
+1 - 40:24 - Foul
+1 - 41:06 - Indirect free-kick
+1 - 41:13 - Foul
+1 - 42:05 - Direct free-kick
+1 - 42:07 - Ball out of play
+1 - 42:24 - Corner
+1 - 42:32 - Shots on target
+1 - 42:53 - Foul
+1 - 43:09 - Indirect free-kick
+1 - 44:13 - Shots off target
+1 - 44:14 - Ball out of play
+1 - 44:43 - Clearance
+1 - 44:49 - Ball out of play
+1 - 44:59 - Throw-in
+Video processing time is 22380.993077516556 seconds

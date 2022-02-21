@@ -32,7 +32,7 @@ def first_last_frame(frame_num, seconds_window, fs):
     return f, l
 
 
-def detect_faces(directory, action_list, fs, seconds_window, text_path):
+def detect_faces(directory, action_list, fs, seconds_window):
 
     faces = pd.DataFrame(
         columns=['face_locations', 'current_frame', 'action_frame', 'action_position', 'action_name', 'action_time',
@@ -125,6 +125,7 @@ if __name__ == '__main__':
             frames_dir.mkdir(parents=True, exist_ok=True)
             logging.info(f'Extracting frames into {frames_dir}')
             subprocess.check_call(f'./scripts/extract_frames.sh "{str(video).strip()}" "{frames_dir}"', shell=True)
+            logging.info('Frames extracted successfully!')
 
         num_frames = len(list(frames_dir.glob('*.jpg')))
         logging.info(f'Number of frames to segment {num_frames}')
@@ -147,7 +148,7 @@ if __name__ == '__main__':
         information_file.write(str(match_path)+'\n\n')
         information_file.close()
 
-        detected_faces = detect_faces(frames_dir, actions[half], args.sampling_freq, args.window, txt_path)
+        detected_faces = detect_faces(frames_dir, actions[half], args.sampling_freq, args.window)
         logging.info(f'Video processing time is {time.time() - start} seconds')
 
         # saving the results

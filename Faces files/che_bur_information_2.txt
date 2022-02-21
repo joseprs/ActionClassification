@@ -1,0 +1,95 @@
+/mnt/DATA/datasets/soccernet/england_epl/2014-2015/2015-02-21 - 18-00 Chelsea 1 - 1 Burnley
+
+2 - 00:27 - Ball out of play
+2 - 00:41 - Throw-in
+2 - 00:57 - Foul
+2 - 01:42 - Ball out of play
+2 - 02:15 - Clearance
+2 - 02:51 - Ball out of play
+2 - 03:13 - Clearance
+2 - 03:26 - Foul
+2 - 04:51 - Indirect free-kick
+2 - 04:56 - Shots on target
+2 - 04:57 - Ball out of play
+2 - 05:26 - Corner
+2 - 05:41 - Ball out of play
+2 - 05:55 - Throw-in
+2 - 05:59 - Shots off target
+2 - 06:30 - Clearance
+2 - 07:10 - Ball out of play
+2 - 07:29 - Corner
+2 - 07:33 - Ball out of play
+2 - 08:05 - Clearance
+2 - 08:16 - Ball out of play
+2 - 08:24 - Throw-in
+2 - 09:19 - Shots on target
+2 - 09:46 - Foul
+2 - 10:21 - Direct free-kick
+2 - 10:33 - Foul
+2 - 12:30 - Ball out of play
+2 - 13:03 - Clearance
+2 - 13:06 - Foul
+2 - 13:38 - Ball out of play
+2 - 14:02 - Clearance
+2 - 14:32 - Ball out of play
+2 - 14:48 - Throw-in
+2 - 16:52 - Foul
+2 - 17:01 - Yellow card
+2 - 17:19 - Substitution
+2 - 19:12 - Ball out of play
+2 - 19:32 - Throw-in
+2 - 20:42 - Ball out of play
+2 - 21:04 - Corner
+2 - 22:04 - Shots on target
+2 - 23:09 - Ball out of play
+2 - 23:28 - Throw-in
+2 - 23:54 - Ball out of play
+2 - 24:00 - Throw-in
+2 - 24:06 - Ball out of play
+2 - 24:25 - Red card
+2 - 25:05 - Yellow card
+2 - 26:10 - Substitution
+2 - 26:25 - Throw-in
+2 - 27:02 - Ball out of play
+2 - 27:18 - Throw-in
+2 - 27:26 - Ball out of play
+2 - 27:37 - Throw-in
+2 - 28:06 - Foul
+2 - 28:37 - Offside
+2 - 29:00 - Ball out of play
+2 - 29:23 - Clearance
+2 - 29:35 - Ball out of play
+2 - 29:48 - Throw-in
+2 - 30:06 - Ball out of play
+2 - 30:22 - Throw-in
+2 - 30:44 - Shots off target
+2 - 31:09 - Clearance
+2 - 32:57 - Shots off target
+2 - 33:25 - Substitution
+2 - 33:28 - Clearance
+2 - 34:03 - Ball out of play
+2 - 34:29 - Corner
+2 - 34:36 - Shots on target
+2 - 34:38 - Ball out of play
+2 - 35:19 - Corner
+2 - 35:21 - Goal
+2 - 36:17 - Kick-off
+2 - 36:43 - Ball out of play
+2 - 36:46 - Throw-in
+2 - 37:15 - Ball out of play
+2 - 37:32 - Throw-in
+2 - 39:28 - Ball out of play
+2 - 39:54 - Substitution
+2 - 40:16 - Corner
+2 - 40:20 - Ball out of play
+2 - 40:39 - Throw-in
+2 - 41:37 - Ball out of play
+2 - 42:04 - Throw-in
+2 - 42:11 - Ball out of play
+2 - 42:26 - Clearance
+2 - 43:04 - Ball out of play
+2 - 43:05 - Throw-in
+2 - 43:21 - Shots off target
+2 - 43:59 - Clearance
+2 - 44:42 - Ball out of play
+Video processing time is 18203.43237543106 seconds
