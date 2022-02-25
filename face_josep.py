@@ -15,26 +15,23 @@ from deepface.detectors import FaceDetector
 from skimage import io
 
 
-def detect_faces(directory, action_list, fs, seconds_window):
-
-    faces = pd.DataFrame(
-        columns=['face_locations', 'current_frame', 'action_frame', 'action_position', 'action_name', 'action_time',
-                 'half'])
-    detector_name = 'retinaface'
-    detector = FaceDetector.build_model(detector_name)
+def detect_faces(directory, action_list, fs, seconds_window, face_detector, number_frames):
+    faces = pd.DataFrame(columns=['face_locations', 'current_frame', 'action_frame', 'action_position',
+                                  'action_name', 'action_time', 'half'])
 
     # going action by action
     for action in tqdm(action_list[1:], desc='Actions Faces Detection', leave=True, position=0):
 
         position = int(action['position'])
         frame_num = get_frame(position, fs)
-        first_action_frame, last_action_frame = first_last_frame(frame_num, seconds_window, fs, directory)
+
+        first_action_frame, last_action_frame = first_last_frame(frame_num, seconds_window, fs, number_frames)
 
         # going frame by frame inside the action
         for i in range(first_action_frame, last_action_frame):
             frame_path = directory.joinpath(f'{i:05}' + '.jpg')
             image = io.imread(frame_path)
-            face_loc = FaceDetector.detect_faces(detector, detector_name, image)
+            face_loc = FaceDetector.detect_faces(face_detector, 'retinaface', image)
             array = np.array(face_loc)
             face_locations = []
             for arr in array:
@@ -45,10 +42,6 @@ def detect_faces(directory, action_list, fs, seconds_window):
                                       'action_position': position, 'action_name': action['label'],
                                       'action_time': action['gameTime'],
                                       'half': half + 1}, ignore_index=True)
-
-        information_file = open('information.txt', "a")
-        information_file.write(action['gameTime']+' - '+action['label']+ '\n')
-        information_file.close()
 
     return faces
 
@@ -127,11 +120,12 @@ if __name__ == '__main__':
         an2 = annotations[index:]
         actions = [an1, an2]
 
-        information_file = open('information.txt', "w")
-        information_file.write(str(match_path)+'\n\n')
-        information_file.close()
+        detector_name = 'retinaface'
+        detector = FaceDetector.build_model(detector_name)
+        number_of_frames = len(os.listdir(frames_dir))
+        detected_faces = detect_faces(frames_dir, actions[half], args.sampling_freq,
+                                      args.window, detector, number_of_frames)
 
-        detected_faces = detect_faces(frames_dir, actions[half], args.sampling_freq, args.window)
         logging.info(f'Video processing time is {time.time() - start} seconds')
 
         # saving the results
@@ -139,9 +133,3 @@ if __name__ == '__main__':
         detected_faces.to_json('detections(json).json', orient='records')
         np.save(face_detection_results_fpath, detected_faces)
         detected_faces.to_json(face_detection_results_fpath_json, orient='records')
-
-        # saving to the information file
-        information_file = open('information.txt', "a")
-        information_file.write(f'Video processing time is {time.time() - start} seconds')
-        information_file.close()
-
