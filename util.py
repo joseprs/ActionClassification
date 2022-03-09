@@ -20,6 +20,6 @@ def get_frame(position, fs):
 
 
 def first_last_frame(frame_num, seconds_window, fs, num_frames):
-    first = max(frame_num - (seconds_window * fs), 0)
+    first = max(frame_num - (seconds_window * fs), 1)
     last = min(num_frames, frame_num + (seconds_window * fs))
     return first, last
