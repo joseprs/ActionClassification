@@ -16,11 +16,12 @@ import json
 # from skimage import io
 from retinaface.commons import preprocess
 from retinaface.model import retinaface_model
+import tensorflow as tf
 
 
 def load_image(arguments):
     img = cv2.imread(arguments)
-    return preprocess.preprocess_image(img)
+    return preprocess.preprocess_image(img, True)
 
 
 class FaceFeeder:
@@ -152,7 +153,7 @@ if __name__ == '__main__':
         # os.remove(invalid_frames)
         # frames_dir.joinpath(str(f'{invalid_frames[0]:05}')+'.jpg')
 
-        f = FaceFeeder(frames_dir, valid_frames, 10)
+        f = FaceFeeder(frames_dir, valid_frames, 37)
         n_batches = f.__len__()
         logging.info(f'Number of batches to process: {n_batches}')
 
@@ -163,7 +164,12 @@ if __name__ == '__main__':
 
             batch, im_infos, im_scales = f.__getitem__(batch_num)
             frame_ids = f.batch_list[batch_num]
+
+            # with tf.device('/device:GPU:0'):
+            #     tensor_batch = tf.constant(batch)
+            # outputs = model(tensor_batch)
             outputs = model(batch)
+
 
             results = []
             outputs2 = [elt.numpy() for elt in outputs]
@@ -172,4 +178,4 @@ if __name__ == '__main__':
                 output = [np.expand_dims(outputs2[j][i, ...], axis=0) for j in range(9)]
                 results.append(postprocess_function(output, im_infos[i], im_scales[i]))
 
-            print(results)
+            # print(results)
