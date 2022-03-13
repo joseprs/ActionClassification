@@ -8,6 +8,8 @@ import cv2
 import numpy as np
 from tqdm import tqdm
 
+from multiprocessing import Pool
+
 from util import load_log_configuration, get_frame, first_last_frame, postprocess_function
 import os
 import json
@@ -19,18 +21,20 @@ from retinaface.model import retinaface_model
 import tensorflow as tf
 
 
-def load_image(arguments):
-    img = cv2.imread(arguments)
-    return preprocess.preprocess_image(img, True)
+def load_image(args):
+    frame_idx, frame_path = args
+    img = cv2.imread(frame_path)
+    return frame_idx, preprocess.preprocess_image(img, True)
 
 
 class FaceFeeder:
 
-    def __init__(self, directory, valid_frames, batch_size):
+    def __init__(self, directory, valid_frames, batch_size, num_processes=10):
 
         self.directory = Path(directory)
         self.valid_frames = valid_frames
         self.batch_size = batch_size
+        self.num_processes = num_processes
 
         batch_list = []
         for i in range(0, len(self.valid_frames), self.batch_size):
@@ -42,20 +46,32 @@ class FaceFeeder:
 
     def __getitem__(self, index):
 
-        batch = np.zeros([self.batch_size, 1024, 1820, 3])
-        im_infos = []
-        im_scales = []
+        batch = np.zeros([self.batch_size, 1024, 1820, 3]) # FIXME: revisar size mas videos
+        im_infos = [None]*self.batch_size
+        im_scales = [None]*self.batch_size
 
+        # for idx, num in enumerate(self.batch_list[index]):
+        #     frame_path = str(self.directory.joinpath(str(f'{num:05}') + '.jpg'))
+        #     im_tensor, im_info, im_scale = load_image(frame_path)
+        #
+        #     # im = cv2.imread(str(self.directory.joinpath(str(f'{num:05}')+'.jpg')))
+        #     # im_tensor, im_info, im_scale = preprocess.preprocess_image(im, True)
+        #
+        #     batch[idx, :, :, :] = im_tensor
+        #     im_infos.append(im_info)
+        #     im_scales.append(im_scale)
+
+        frame_paths, frame_indices = [], []
         for idx, num in enumerate(self.batch_list[index]):
-            frame_path = str(self.directory.joinpath(str(f'{num:05}') + '.jpg'))
-            im_tensor, im_info, im_scale = load_image(frame_path)
+            frame_paths.append(str(self.directory.joinpath(str(f'{num:05}') + '.jpg')))
+            frame_indices.append(idx)
 
-            # im = cv2.imread(str(self.directory.joinpath(str(f'{num:05}')+'.jpg')))
-            # im_tensor, im_info, im_scale = preprocess.preprocess_image(im, True)
-
-            batch[idx, :, :, :] = im_tensor
-            im_infos.append(im_info)
-            im_scales.append(im_scale)
+        with Pool(processes=self.num_processes) as pool:
+            for idx, preprocessed_frame in pool.imap_unordered(load_image, zip(frame_indices, frame_paths)):
+                im_tensor, im_info, im_scale = preprocessed_frame
+                batch[idx, :, :, :] = im_tensor
+                im_infos[idx] = im_info
+                im_scales[idx] = im_scale
 
         return batch, im_infos, im_scales
 
@@ -169,7 +185,6 @@ if __name__ == '__main__':
             #     tensor_batch = tf.constant(batch)
             # outputs = model(tensor_batch)
             outputs = model(batch)
-
 
             results = []
             outputs2 = [elt.numpy() for elt in outputs]
