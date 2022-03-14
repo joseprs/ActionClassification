@@ -101,7 +101,7 @@ def postprocess_function(net_out, im_info, im_scale, threshold=0.9):
     proposals = np.vstack(proposals_list)
     if proposals.shape[0] == 0:
         landmarks = np.zeros((0, 5, 2))
-        return np.zeros((0, 5)), landmarks
+        return {}  # np.zeros((0, 5)), landmarks # CHANGE JOSEP
     scores = np.vstack(scores_list)
     scores_ravel = scores.ravel()
     order = scores_ravel.argsort()[::-1]

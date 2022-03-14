@@ -7,22 +7,18 @@ from pathlib import Path
 import cv2
 import numpy as np
 from tqdm import tqdm
-
 from multiprocessing import Pool
 
 from util import load_log_configuration, get_frame, first_last_frame, postprocess_function
-import os
 import json
-# import pandas as pd
-# from deepface.detectors import FaceDetector
-# from skimage import io
+
 from retinaface.commons import preprocess
 from retinaface.model import retinaface_model
 import tensorflow as tf
 
 
-def load_image(args):
-    frame_idx, frame_path = args
+def load_image(arg):
+    frame_idx, frame_path = arg
     img = cv2.imread(frame_path)
     return frame_idx, preprocess.preprocess_image(img, True)
 
@@ -46,9 +42,10 @@ class FaceFeeder:
 
     def __getitem__(self, index):
 
-        batch = np.zeros([self.batch_size, 1024, 1820, 3]) # FIXME: revisar size mas videos
-        im_infos = [None]*self.batch_size
-        im_scales = [None]*self.batch_size
+        batch = np.zeros([self.batch_size, 1024, 1820, 3])  # FIXME: revisar size mas videos
+        # esta size es la que devuelve el preprocess
+        im_infos = [None] * self.batch_size
+        im_scales = [None] * self.batch_size
 
         # for idx, num in enumerate(self.batch_list[index]):
         #     frame_path = str(self.directory.joinpath(str(f'{num:05}') + '.jpg'))
@@ -98,6 +95,10 @@ if __name__ == '__main__':
                        help='Window',
                        default=10, type=int)
 
+    group.add_argument('-bs', '--batch_size',
+                       help='Window',
+                       default=37, type=int)
+
     parser.add_argument('--log_config', required=False,
                         help='Logging configuration file (default: config/log_config.yml)',
                         default="config/log_config.yml", type=lambda p: Path(p))
@@ -116,6 +117,9 @@ if __name__ == '__main__':
     else:
         videos = [args.single_video]
 
+    # RetinaFace model
+    model = retinaface_model.build_model()
+
     for video in tqdm(videos, desc='Overall Progress', leave=True, position=0):
 
         half = int(video.stem[0]) - 1
@@ -124,8 +128,8 @@ if __name__ == '__main__':
         face_detection_results_fpath = match_path.joinpath(f'face_detection_results_{half + 1}_HQ.npy')
         face_detection_results_fpath_json = match_path.joinpath(f'face_detection_results_{half + 1}_HQ.json')
 
-        if face_detection_results_fpath.exists():
-            continue
+        # if face_detection_results_fpath.exists():
+        #    continue
 
         frames_dir = match_path.joinpath(f'{half + 1}_HQ', 'frames')
         if not frames_dir.exists():
@@ -169,12 +173,12 @@ if __name__ == '__main__':
         # os.remove(invalid_frames)
         # frames_dir.joinpath(str(f'{invalid_frames[0]:05}')+'.jpg')
 
-        f = FaceFeeder(frames_dir, valid_frames, 37)
+        f = FaceFeeder(frames_dir, valid_frames, args.batch_size)  # 37
         n_batches = f.__len__()
         logging.info(f'Number of batches to process: {n_batches}')
 
-        # RetinaFace model
-        model = retinaface_model.build_model()
+        # dict where we will put all our faces, for every frame
+        faces = {}
 
         for batch_num in tqdm(range(n_batches), desc='Batches Progress', leave=True, position=0):
 
@@ -186,11 +190,14 @@ if __name__ == '__main__':
             # outputs = model(tensor_batch)
             outputs = model(batch)
 
-            results = []
+            # results = []
             outputs2 = [elt.numpy() for elt in outputs]
 
             for i, frame_id in enumerate(frame_ids):
                 output = [np.expand_dims(outputs2[j][i, ...], axis=0) for j in range(9)]
-                results.append(postprocess_function(output, im_infos[i], im_scales[i]))
+                # results.append(postprocess_function(output, im_infos[i], im_scales[i]))
+                faces[f'{frame_id:05}'] = postprocess_function(output, im_infos[i], im_scales[i])
 
-            # print(results)
+        logging.info(f'Video processing time is {time.time() - start} seconds')
+        np.save('test_detections', faces)
+        np.save(face_detection_results_fpath, faces)
