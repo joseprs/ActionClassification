@@ -20,7 +20,7 @@ import tensorflow as tf
 def load_image(arg):
     frame_idx, frame_path = arg
     img = cv2.imread(frame_path)
-    return frame_idx, preprocess.preprocess_image(img, True)
+    return frame_idx, preprocess.preprocess_image(img) #, True)
 
 
 class FaceFeeder:
@@ -180,8 +180,13 @@ if __name__ == '__main__':
         # dict where we will put all our faces, for every frame
         faces = {}
 
+<<<<<<< HEAD
         for batch_num in tqdm(range(n_batches), desc='Batches Progress', leave=True, position=0):
             # range(n_batches)
+=======
+        for batch_num in tqdm(range(2), desc='Batches Progress', leave=True, position=0):
+
+>>>>>>> a700f18a58c58745589fa5a906f873af03af1994
             batch, im_infos, im_scales = f.__getitem__(batch_num)
             frame_ids = f.batch_list[batch_num]
 
@@ -200,5 +205,10 @@ if __name__ == '__main__':
                 faces[f'{frame_id:05}'] = postprocess_function(output, im_infos[i], im_scales[i])
 
         logging.info(f'Video processing time is {time.time() - start} seconds')
+<<<<<<< HEAD
         np.save('test_detections', [faces])
         np.save(face_detection_results_fpath, [faces])
+=======
+        np.save('test_detections', faces)
+        # np.save(face_detection_results_fpath, faces)
+>>>>>>> a700f18a58c58745589fa5a906f873af03af1994
