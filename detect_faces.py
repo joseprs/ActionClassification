@@ -181,13 +181,14 @@ if __name__ == '__main__':
         faces = {}
 
         for batch_num in tqdm(range(n_batches), desc='Batches Progress', leave=True, position=0):
-
+            # range(n_batches)
             batch, im_infos, im_scales = f.__getitem__(batch_num)
             frame_ids = f.batch_list[batch_num]
 
             # with tf.device('/device:GPU:0'):
             #     tensor_batch = tf.constant(batch)
             # outputs = model(tensor_batch)
+            
             outputs = model(batch)
 
             # results = []
@@ -195,9 +196,9 @@ if __name__ == '__main__':
 
             for i, frame_id in enumerate(frame_ids):
                 output = [np.expand_dims(outputs2[j][i, ...], axis=0) for j in range(9)]
-                # results.append(postprocess_function(output, im_infos[i], im_scales[i]))
+                # results.append([frame_id, postprocess_function(output, im_infos[i], im_scales[i])])
                 faces[f'{frame_id:05}'] = postprocess_function(output, im_infos[i], im_scales[i])
 
         logging.info(f'Video processing time is {time.time() - start} seconds')
-        np.save('test_detections', faces)
-        np.save(face_detection_results_fpath, faces)
+        np.save('test_detections', [faces])
+        np.save(face_detection_results_fpath, [faces])
