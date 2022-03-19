@@ -130,7 +130,7 @@ if __name__ == '__main__':
         # if face_detection_results_fpath.exists():
         #    continue
 
-        frames_dir = match_path.joinpath(f'{half + 1}_HQ', 'frames8fps')
+        frames_dir = match_path.joinpath(f'{half + 1}_HQ', 'frames')
         if not frames_dir.exists():
             frames_dir.mkdir(parents=True, exist_ok=True)
             logging.info(f'Extracting frames into {frames_dir}')
