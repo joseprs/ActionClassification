@@ -17,6 +17,16 @@ from retinaface.commons import preprocess
 from retinaface.model import retinaface_model
 import tensorflow as tf
 
+def load_image(arg):
+    frame_idx, frame_path = arg
+    img = cv2.imread(frame_path)
+    return frame_idx, preprocess.preprocess_image(img, True)
+
+class LoadFaces:
+
+    def __init__(self, directory, faces_frames, num_processes=10):
+        self.directory = directory
+        self.faces_frames = faces_frames
 
 
 
