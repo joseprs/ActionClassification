@@ -17,18 +17,18 @@ from retinaface.commons import preprocess
 from retinaface.model import retinaface_model
 import tensorflow as tf
 
+
 def load_image(arg):
     frame_idx, frame_path = arg
     img = cv2.imread(frame_path)
     return frame_idx, preprocess.preprocess_image(img, True)
+
 
 class LoadFaces:
 
     def __init__(self, directory, faces_frames, num_processes=10):
         self.directory = directory
         self.faces_frames = faces_frames
-
-
 
 
 if __name__ == '__main__':
@@ -83,10 +83,11 @@ if __name__ == '__main__':
         half = int(video.stem[0]) - 1
         match_path = video.parent
         frames_dir = match_path.joinpath(f'{half + 1}_HQ', 'frames')
-        num_frames = len(list(frames_dir.glob('*.jpg')))
 
         face_detection_results_fpath = match_path.joinpath(f'face_detection_results_{half + 1}_HQ.npy')
-        face_locations = np.load(face_detection_results_fpath, allow_pickle=True)
+        face_detections = np.load(face_detection_results_fpath, allow_pickle=True)
+        face_detections = face_detections[0]
 
-        print(type(face_locations))
+        faces_frames = sorted(list([k for k, v in face_detections.items() if len(v) > 0]))
 
+        print(faces_frames)

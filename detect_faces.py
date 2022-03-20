@@ -3,14 +3,13 @@ import subprocess
 import time
 from argparse import ArgumentParser
 from pathlib import Path
-
+import json
 import cv2
 import numpy as np
 from tqdm import tqdm
 from multiprocessing import Pool
 
 from util import load_log_configuration, get_frame, first_last_frame, postprocess_function
-import json
 
 from retinaface.commons import preprocess
 from retinaface.model import retinaface_model
@@ -140,7 +139,6 @@ if __name__ == '__main__':
         num_frames = len(list(frames_dir.glob('*.jpg')))
         logging.info(f'Number of frames to segment: {num_frames}')
 
-        # where we put starting TIME?
         start = time.time()
 
         # read annotations/Labels file and separate it by half
@@ -168,6 +166,7 @@ if __name__ == '__main__':
 
         invalid_frames = list(set(np.arange(num_frames)) - valid_frames)
         valid_frames = sorted(valid_frames)
+        logging.info(f'Number of valid frames: {len(valid_frames)}')
         # DELETE invalid frames
         # os.remove(invalid_frames)
         # frames_dir.joinpath(str(f'{invalid_frames[0]:05}')+'.jpg')
@@ -183,7 +182,7 @@ if __name__ == '__main__':
 
             batch, im_infos, im_scales = f.__getitem__(batch_num)
             frame_ids = f.batch_list[batch_num]
-            
+
             outputs = model(batch)
 
             # results = []
