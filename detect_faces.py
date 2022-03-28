@@ -116,7 +116,7 @@ if __name__ == '__main__':
         videos = [args.single_video]
 
     # RetinaFace model
-    model = retinaface_model.build_model()
+    # model = retinaface_model.build_model()
 
     for video in tqdm(videos, desc='Overall Progress', leave=True, position=0):
 
@@ -130,6 +130,8 @@ if __name__ == '__main__':
         #    continue
 
         frames_dir = match_path.joinpath(f'{half + 1}_HQ', 'frames')
+        logging.info(f'Match and part: {frames_dir}')
+
         if not frames_dir.exists():
             frames_dir.mkdir(parents=True, exist_ok=True)
             logging.info(f'Extracting frames into {frames_dir}')
@@ -140,7 +142,7 @@ if __name__ == '__main__':
         logging.info(f'Number of frames to segment: {num_frames}')
 
         start = time.time()
-
+        model = retinaface_model.build_model()
         # read annotations/Labels file and separate it by half
         json_path = match_path.joinpath('Labels-v2.json')
         with open(json_path) as f:
