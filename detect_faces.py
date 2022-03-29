@@ -143,6 +143,7 @@ if __name__ == '__main__':
 
         start = time.time()
         model = retinaface_model.build_model()
+
         # read annotations/Labels file and separate it by half
         json_path = match_path.joinpath('Labels-v2.json')
         with open(json_path) as f:
