@@ -142,6 +142,10 @@ if __name__ == '__main__':
         logging.info(f'Number of frames to segment: {num_frames}')
 
         start = time.time()
+<<<<<<< HEAD
+=======
+        model = retinaface_model.build_model()
+>>>>>>> ceac5bbac1b2e610974ebe1a4a0a6f8b7ee00c3a
 
         # read annotations/Labels file and separate it by half
         json_path = match_path.joinpath('Labels-v2.json')

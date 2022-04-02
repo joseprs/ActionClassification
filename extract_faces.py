@@ -9,7 +9,7 @@ import numpy as np
 from tqdm import tqdm
 from multiprocessing import Pool
 
-from util import load_log_configuration, get_frame, first_last_frame, postprocess_function
+from util import load_log_configuration, get_segmented_face_areas, get_masked_face
 import json
 
 from deepface.DeepFace import build_model
@@ -18,17 +18,44 @@ from retinaface.model import retinaface_model
 import tensorflow as tf
 
 
-def load_image(arg):
-    frame_idx, frame_path = arg
-    img = cv2.imread(frame_path)
-    return frame_idx, preprocess.preprocess_image(img, True)
+def _load_masked_patches(args):
+    half, frame_idx, frame_path, segmented_people = args
+    frame = cv2.imread(str(frame_path))
+
+    masked_faces = []
+    for idx, bb in enumerate(segmented_people):
+        masked_face = get_masked_face(frame, bb)
+        masked_faces.append(((half, frame_idx, idx), masked_face))
+    return masked_faces
 
 
-class LoadFaces:
+class FaceEmotionFeeder:
 
-    def __init__(self, directory, faces_frames, num_processes=10):
-        self.directory = directory
-        self.faces_frames = faces_frames
+    def __init__(self, match_path, transform=None, num_processes=None):
+        self.match_path = match_path
+        self.transform = transform
+        self.data = []
+
+        for half in range(1):
+            face_detections_fpath = match_path.joinpath(f'face_detection_results_{half + 1}_HQ1.npy')
+            face_detections = np.load(face_detections_fpath, allow_pickle=True)[0]
+            faces_frames = [k for k, v in face_detections.items() if len(v) > 0]
+
+            frames_path = match_path.joinpath(f'{half + 1}_HQ', 'frames')
+            halves, frame_indices, frame_paths, segmented_faces = [], [], [], []
+
+            for frame in faces_frames[:3]:
+                segmented_faces_in_frame = get_segmented_face_areas(face_detections[frame])
+
+                if len(segmented_faces_in_frame) > 0:
+                    halves.append(half)
+                    frame_indices.append(frame)
+                    frame_paths.append(frames_path.joinpath(frame + '.jpg'))
+                    segmented_faces.append(segmented_faces_in_frame)
+
+            with Pool(processes=num_processes) as pool:
+                for masked_patches in pool.imap_unordered(_load_masked_patches, zip(halves, frame_indices, frame_paths, segmented_faces)):
+                    self.data.extend(masked_patches)
 
 
 if __name__ == '__main__':
@@ -67,7 +94,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    # load_log_configuration(args.log_config, args.logs_dir)
+    load_log_configuration(args.log_config, args.logs_dir)
 
     if args.videos:
         with args.videos.open() as f:
@@ -76,18 +103,12 @@ if __name__ == '__main__':
         videos = [args.single_video]
 
     # DEEPFACE model
-    model = build_model('Emotion')
+    # model = build_model('Emotion')
 
     for video in tqdm(videos, desc='Overall Extraction Progress', leave=True, position=0):
-
         half = int(video.stem[0]) - 1
         match_path = video.parent
-        frames_dir = match_path.joinpath(f'{half + 1}_HQ', 'frames')
 
-        face_detection_results_fpath = match_path.joinpath(f'face_detection_results_{half + 1}_HQ.npy')
-        face_detections = np.load(face_detection_results_fpath, allow_pickle=True)
-        face_detections = face_detections[0]
-
-        faces_frames = sorted(list([k for k, v in face_detections.items() if len(v) > 0]))
-
-        print(faces_frames)
+        ef = FaceEmotionFeeder(match_path).data
+        print(len(ef[0]))
+        print(ef)
