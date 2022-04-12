@@ -210,15 +210,17 @@ def preprocess_face(img, target_size=(224, 224), grayscale=False, align=True, en
     return img_pixels
 
 
-def get_masked_face(image, area):
-    face = image[area[1]:area[3], area[0]:area[2], :]
+def crop_face(image, bbox):
+    face = image[bbox[1]:bbox[3], bbox[0]:bbox[2], :]
+    area = abs(bbox[1] - bbox[3]) * abs(bbox[0] - bbox[2])
     face = preprocess_face(img=face, target_size=(48, 48), grayscale=True)
-    return face
+    return face, area
 
 
-def get_segmented_face_areas(face_detections_frame):
+def get_detected_facial_areas(face_detections_frame):
     face_list = []
     for face in face_detections_frame:
         face_area = face_detections_frame[face]['facial_area']
         face_list.append(face_area)
     return face_list
+
