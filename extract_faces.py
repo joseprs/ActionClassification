@@ -23,13 +23,13 @@ class FacePatch:
 
 
 def _load_face_patches(args):
-    half, frame_idx, frame_path, segmented_faces = args
+    half, frame_idx, frame_path, segmented_faces, scores = args
     frame = cv2.imread(str(frame_path))
 
     face_patches = []
     for idx, bb in enumerate(segmented_faces):
         face_patch, area = crop_face(frame, bb)
-        face_patches.append(FacePatch((half, frame_idx, idx, area), face_patch))
+        face_patches.append(FacePatch((half, frame_idx, idx, area, scores[idx]), face_patch))
     return face_patches
 
 
@@ -62,20 +62,21 @@ class FaceEmotionFeeder(keras.utils.Sequence):
             faces_frames = [k for k, v in face_detections.items() if len(v) > 0]
 
             frames_path = match_path.joinpath(f'{half + 1}_HQ', 'frames')
-            halves, frame_indices, frame_paths, detected_faces = [], [], [], []
+            halves, frame_indices, frame_paths, detected_faces, scores = [], [], [], [], []
 
             for frame in tqdm(faces_frames, desc=f'Half {half + 1}: Importing frames progress', leave=True, position=0):
-                detected_faces_in_frame = get_detected_facial_areas(face_detections[frame])
+                detected_faces_in_frame, scores_in_frame = get_detected_facial_areas(face_detections[frame])
 
                 if len(detected_faces_in_frame) > 0:
                     halves.append(half)
                     frame_indices.append(frame)
                     frame_paths.append(frames_path.joinpath(frame + '.jpg'))
                     detected_faces.append(detected_faces_in_frame)
+                    scores.append(scores_in_frame)
 
             with Pool(processes=num_processes) as pool:
                 for face_patches in pool.imap_unordered(_load_face_patches,
-                                                        zip(halves, frame_indices, frame_paths, detected_faces)):
+                                                        zip(halves, frame_indices, frame_paths, detected_faces, scores)):
                     self.data.extend(face_patches)
 
         faces_batch_list = []
@@ -145,7 +146,7 @@ if __name__ == '__main__':
 
     for video in tqdm(videos, desc='Overall Extraction Progress', leave=True, position=0):
         start = time.time()
-        match_path = video  # .parent
+        match_path = video.parent
         logging.info(f'Match path: {match_path}')
 
         # .data returns a list (N faces) of FacePatch (class)
@@ -163,8 +164,8 @@ if __name__ == '__main__':
             outputs = extractor(faces_batch)
             vectors = outputs[8].numpy()
 
-            for (half, frame_idx, idx, area), prediction in zip(infos_batch, vectors):
-                results.append(((half, frame_idx, idx, area), prediction))
+            for (half, frame_idx, idx, area, score), prediction in zip(infos_batch, vectors):
+                results.append(((half, frame_idx, idx, area, score), prediction))
                 # results_dict[half][frame_idx][idx] = (prediction, area)
 
         logging.info(f'Video processing time is {time.time() - start} seconds')

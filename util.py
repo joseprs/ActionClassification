@@ -219,8 +219,11 @@ def crop_face(image, bbox):
 
 def get_detected_facial_areas(face_detections_frame):
     face_list = []
+    score_list = []
     for face in face_detections_frame:
         face_area = face_detections_frame[face]['facial_area']
         face_list.append(face_area)
-    return face_list
+        score = face_detections_frame[face]['score']
+        score_list.append(score)
+    return face_list, score_list
 

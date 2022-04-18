@@ -5,6 +5,7 @@ from argparse import ArgumentParser
 from pathlib import Path
 import json
 import cv2
+import os
 import numpy as np
 from tqdm import tqdm
 from multiprocessing import Pool
@@ -126,9 +127,6 @@ if __name__ == '__main__':
         face_detection_results_fpath = match_path.joinpath(f'face_detection_results_{half + 1}_HQ.npy')
         face_detection_results_fpath_json = match_path.joinpath(f'face_detection_results_{half + 1}_HQ.json')
 
-        # if face_detection_results_fpath.exists():
-        #    continue
-
         frames_dir = match_path.joinpath(f'{half + 1}_HQ', 'frames')
         logging.info(f'Match and part: {frames_dir}')
 
@@ -169,9 +167,10 @@ if __name__ == '__main__':
         invalid_frames = list(set(np.arange(num_frames)) - valid_frames)
         valid_frames = sorted(valid_frames)
         logging.info(f'Number of valid frames: {len(valid_frames)}')
+
         # DELETE invalid frames
-        # os.remove(invalid_frames)
-        # frames_dir.joinpath(str(f'{invalid_frames[0]:05}')+'.jpg')
+        for frame in invalid_frames[1:]:
+            os.remove(frames_dir.joinpath(f'{frame:05}.jpg'))
 
         f = FaceFeeder(frames_dir, valid_frames, args.batch_size)  # 37
         n_batches = f.__len__()
