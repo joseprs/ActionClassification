@@ -12,7 +12,7 @@ import torch.utils.data as data
 
 class SoccerNet(data.Dataset):
 
-    def __init__(self, data_dir: Path, matches: List[Path], window_size_sec=60, frame_rate=2, **kwargs):
+    def __init__(self, data_dir: Path, matches: List[Path], window_size_sec=20, frame_rate=8, **kwargs):
 
         self.path = data_dir
 
@@ -33,7 +33,7 @@ class SoccerNet(data.Dataset):
         # CAMBIAR AQUI
         self.matches = matches
         self.labels = []
-        self._load_labels()
+        # self._load_labels()
 
     @staticmethod
     def read_classes(classes_csv_path):
@@ -96,3 +96,17 @@ class SoccerNet(data.Dataset):
 
     def __len__(self):
         pass
+
+
+if __name__ == '__main__':
+
+    data_path = Path('../soccernet_dataset')
+    matches = list()
+    matches.append('FCB-RMA')
+    matches.append('CHE-ARS')
+    dataset = SoccerNet(data_path, matches)
+    print(dataset.annotations.columns)
+
+    # dataset getitem returns: (list of 160 vectors per action, action name)
+    
+
