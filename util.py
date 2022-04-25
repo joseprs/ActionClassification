@@ -227,3 +227,12 @@ def get_detected_facial_areas(face_detections_frame):
         score_list.append(score)
     return face_list, score_list
 
+
+def features_to_dict(data):
+    features_dict = {0: {}, 1: {}}
+    for info, vector in data:
+        # half, frame, face_id
+        features_dict[info[0]][info[1]] = {}
+    for info, vector in data:
+        features_dict[info[0]][info[1]][info[2]] = (info[3], info[4], vector)
+    return features_dict

@@ -1,4 +1,4 @@
-../../../mnt/DATA/datasets/soccernet/europe_uefa-champions-league/2016-2017/2017-03-08 - 22-45 Barcelona 6 - 1 Paris SG/1_HQ
+europe_uefa-champions-league/2016-2017/2017-03-08 - 22-45 Barcelona 6 - 1 Paris SG/1_HQ
 ../../../mnt/DATA/datasets/soccernet/germany_bundesliga/2014-2015/2015-05-02 - 16-30 Hoffenheim 1 - 1 Dortmund/1_HQ
 ../../../mnt/DATA/datasets/soccernet/germany_bundesliga/2016-2017/2016-09-23 - 21-30 Dortmund 3 - 1 SC Freiburg/1_HQ
 ../../../mnt/DATA/datasets/soccernet/italy_serie-a/2016-2017/2016-12-17 - 20-00 AC Milan 0 - 0 Atalanta/1_HQ
