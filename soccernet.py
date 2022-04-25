@@ -3,7 +3,7 @@ from math import ceil
 from operator import mul
 from pathlib import Path
 from typing import List
-from util import get_frame, features_to_dict
+from util import get_frame, features_to_dict, pool
 
 import numpy as np
 import pandas as pd
@@ -74,27 +74,17 @@ class SoccerNet(data.Dataset):
             emotion_features_path = directory_location.joinpath(match_path.joinpath('face_extraction_results.npy'))
             match_emotion_features = np.load(emotion_features_path, allow_pickle=True)
             match_emotion_features = features_to_dict(match_emotion_features)
-            print(match_emotion_features[0]['00437'])
             self.emotions[match_path] = {}
             for half in range(0, 2):
                 self.emotions[match_path][half] = {}
                 for frame in self.valid_frames_dict[match_path][half]:
                     if frame in match_emotion_features[half].keys():
-                        print(frame)
                         # frame_emotion_vectors = match_emotion_features[1] where (half == half) and (frame == frame)
-                        frame_emotion_vectors = match_emotion_features[half][frame].keys()
-                        print(frame_emotion_vectors)
-                        # self.emotions[match_path][half][frame] = pool(frame_emotion_vectors)
-                        break
+                        frame_emotion_vectors = [info[2] for id, info in match_emotion_features[half][frame].items()]
+                        self.emotions[match_path][half][frame] = pool(frame_emotion_vectors)
                     else:
                         # self.emotions[match_path][half][frame] = initialized vector
-                        a = 'adeu'
-
-
-
-                    # self.emotions[match_path][half][frame] = pool(frame_emotion_vectors)
-
-
+                        self.emotions[match_path][half][frame] = np.random.randint(1, 10, 128) / 1000000
 
     @staticmethod
     def read_classes(classes_csv_path):
@@ -164,12 +154,12 @@ class SoccerNet(data.Dataset):
 
         frame_indices = np.arange(get_frame(position, self.frame_rate) - 80, get_frame(position, self.frame_rate) + 81)
         frame_indices = [f'{index:05}' for index in frame_indices]
-        # emotions_input = [self.emotions[match_path][half][index] for index in frame_indices]
-        # emotions_input = np.array(emotions_input)
-        # return emotions_input, label
+        emotions_input = [self.emotions[match_path][half][index] for index in frame_indices]
+        emotions_input = np.array(emotions_input)
+        return emotions_input, label
 
     def __len__(self):
-        pass
+        return len(self.split_matches_actions)
 
 
 if __name__ == '__main__':
@@ -180,7 +170,8 @@ if __name__ == '__main__':
         videos = [Path(line).parent for line in f.readlines()][:1]
 
     dataset = SoccerNet(data_path, videos)
-    # dataset.__getitem__(0)
+    print(len(dataset.__getitem__(1)[0]))
+    print(dataset.__getitem__(1)[1])
     # print(dataset.classes)
     # print(dataset.emotion_features)
     # dataset getitem returns: (list of 160 vectors per action, action name)
