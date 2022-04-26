@@ -227,21 +227,3 @@ def get_detected_facial_areas(face_detections_frame):
         score_list.append(score)
     return face_list, score_list
 
-
-def features_to_dict(data):
-    features_dict = {0: {}, 1: {}}
-    for info, vector in data:
-        features_dict[info[0]][info[1]] = {}
-    for info, vector in data:
-        features_dict[info[0]][info[1]][info[2]] = (info[3], info[4], vector)
-    return features_dict
-
-
-def pool(vector_list):
-    vector_mean = np.zeros([128])
-    for i in range(128):
-        m = []
-        for j in range(len(vector_list)):
-            m.append(vector_list[j][i])
-        vector_mean[i] = np.mean(m)
-    return vector_mean
