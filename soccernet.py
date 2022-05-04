@@ -7,16 +7,14 @@ from util import get_frame
 
 import numpy as np
 import pandas as pd
-import torch
 import torch.utils.data as data
-from tqdm import tqdm
 
 
-def features_to_dict(data):
+def features_to_dict(dataframe):
     features_dict = {0: {}, 1: {}}
-    for info, vector in data:
+    for info, vector in dataframe:
         features_dict[info[0]][info[1]] = {}
-    for info, vector in data:
+    for info, vector in dataframe:
         features_dict[info[0]][info[1]][int(info[2])] = (info[3], info[4], vector)
     return features_dict
 
@@ -68,7 +66,7 @@ class SoccerNet(data.Dataset):
                 self.valid_frames_dict[match][half] = [index for index in sorted(valid_frames)]
 
         # obtaining emotions list (emotions[match][half][frame] --> pooled emotion frame)
-        # TODO: Check if number of faces coincide with "analyze_faces"
+        const = 0
         self.emotions = {}
         for match_path in split_matches:
             emotion_features_path = self.path.joinpath(match_path, 'face_extraction_results.npy')
@@ -78,12 +76,13 @@ class SoccerNet(data.Dataset):
             for half in range(2):
                 self.emotions[match_path][half] = {}
                 for frame in self.valid_frames_dict[match_path][half]:
-                    if frame in match_emotion_features[half].keys():
-                        frame_emotion_vectors = [info[2] for id, info in match_emotion_features[half][frame].items()]
+                    if f'{frame:05}' in match_emotion_features[half].keys():
+                        frame_emotion_vectors = [info[2] for id, info in match_emotion_features[half][f'{frame:05}'].items()]
+                        const += len(frame_emotion_vectors)
                         self.emotions[match_path][half][frame] = self.pool(np.asarray(frame_emotion_vectors), axis=0)
                     else:
                         self.emotions[match_path][half][frame] = np.random.randint(1, 10, 128) / 1000000
-            print('match')
+            print(f'match: {const}')
 
     @staticmethod
     def read_classes(classes_csv_path):
@@ -142,7 +141,7 @@ class SoccerNet(data.Dataset):
         frame_indices = np.arange(get_frame(position, self.frame_rate) - int(self.frames_per_window / 2),
                                   get_frame(position, self.frame_rate) + int(self.frames_per_window / 2) + 1)
         emotions_input = [self.emotions[match_path][half][index] for index in frame_indices]
-        emotions_input = np.array(emotions_input)
+        emotions_input = np.array(emotions_input, dtype=np.float32)  # .T
 
         return emotions_input, label
 

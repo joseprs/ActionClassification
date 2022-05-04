@@ -7,6 +7,7 @@ import numpy as np
 import cv2
 from deepface.commons.functions import load_image
 from tensorflow.keras.preprocessing import image
+from addict import Dict
 
 
 def load_log_configuration(log_config: Path, logs_dir: Path, log_fname_format='%Y-%m-%d_%H-%M-%S.log'):
@@ -226,4 +227,3 @@ def get_detected_facial_areas(face_detections_frame):
         score = face_detections_frame[face]['score']
         score_list.append(score)
     return face_list, score_list
-

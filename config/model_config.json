@@ -1,0 +1,13 @@
+{
+  "model": {
+    "frame_rate": 8,
+    "window_size": 20,
+    "pool": "mean"
+  },
+  "optimization": {
+    "learning_rate": 0.001,
+    "max_epochs": 10000,
+    "batch_size": 1,
+    "random_seed": 0
+  }
+}
