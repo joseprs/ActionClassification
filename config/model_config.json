@@ -6,8 +6,9 @@
   },
   "optimization": {
     "learning_rate": 0.001,
-    "max_epochs": 10000,
-    "batch_size": 1,
-    "random_seed": 0
+    "max_epochs": 1000,
+    "batch_size": 30,
+    "random_seed": 0,
+    "patience": 10
   }
 }

@@ -45,8 +45,9 @@ class SoccerNet(data.Dataset):
         # obtaining our actions list filtered by our match list (pandas DataFrame)
         self.split_matches_actions = pd.DataFrame()
         for match in split_matches:
-            match_actions = pd.concat([self.annotations.loc[(match, i)] for i in range(2)])
-            self.split_matches_actions = pd.concat([self.split_matches_actions, match_actions]).reset_index()
+            match_actions = pd.concat([self.annotations.loc[(match, i)] for i in range(2)]).reset_index()
+            self.split_matches_actions = pd.concat(
+                [self.split_matches_actions, match_actions]).drop_duplicates().reset_index(drop=True)
 
         # obtaining valid frames giving our action list and match list (valid_frames[match][half] --> list)
         self.valid_frames_dict = {}
@@ -67,8 +68,9 @@ class SoccerNet(data.Dataset):
 
         # obtaining emotions list (emotions[match][half][frame] --> pooled emotion frame)
         const = 0
+        const2 = 0
         self.emotions = {}
-        for match_path in split_matches:
+        for match_path in self.split_matches:
             emotion_features_path = self.path.joinpath(match_path, 'face_extraction_results.npy')
             match_emotion_features = np.load(emotion_features_path, allow_pickle=True)
             match_emotion_features = features_to_dict(match_emotion_features)
@@ -77,12 +79,15 @@ class SoccerNet(data.Dataset):
                 self.emotions[match_path][half] = {}
                 for frame in self.valid_frames_dict[match_path][half]:
                     if f'{frame:05}' in match_emotion_features[half].keys():
-                        frame_emotion_vectors = [info[2] for id, info in match_emotion_features[half][f'{frame:05}'].items()]
+                        frame_emotion_vectors = [info[2] for id, info in
+                                                 match_emotion_features[half][f'{frame:05}'].items()]
                         const += len(frame_emotion_vectors)
                         self.emotions[match_path][half][frame] = self.pool(np.asarray(frame_emotion_vectors), axis=0)
                     else:
                         self.emotions[match_path][half][frame] = np.random.randint(1, 10, 128) / 1000000
+                        const2 += 1
             print(f'match: {const}')
+            print(f'match nan: {const2}')
 
     @staticmethod
     def read_classes(classes_csv_path):
@@ -141,9 +146,8 @@ class SoccerNet(data.Dataset):
         frame_indices = np.arange(get_frame(position, self.frame_rate) - int(self.frames_per_window / 2),
                                   get_frame(position, self.frame_rate) + int(self.frames_per_window / 2) + 1)
         emotions_input = [self.emotions[match_path][half][index] for index in frame_indices]
-        emotions_input = np.array(emotions_input, dtype=np.float32)  # .T
-
-        return emotions_input, label
+        emotions_input = np.array(emotions_input, dtype=np.float32)
+        return emotions_input, label - 1  # REVIEW: this is a test
 
     def __len__(self):
         return len(self.split_matches_actions)
@@ -159,5 +163,3 @@ if __name__ == '__main__':
     dataset = SoccerNet(data_path, videos)
     print(len(dataset.__getitem__(1)[0]))
     print(dataset.__getitem__(1)[1])
-
-

@@ -125,6 +125,10 @@ if __name__ == '__main__':
         match_path = video.parent
 
         face_detection_results_fpath = match_path.joinpath(f'face_detection_results_{half + 1}_HQ.npy')
+        if face_detection_results_fpath.exists():
+            logging.info('Already have extractions for this path')
+            continue
+
         face_detection_results_fpath_json = match_path.joinpath(f'face_detection_results_{half + 1}_HQ.json')
 
         frames_dir = match_path.joinpath(f'{half + 1}_HQ', 'frames')
