@@ -2,13 +2,14 @@
   "model": {
     "frame_rate": 8,
     "window_size": 20,
-    "pool": "mean"
+    "pool": "MAX"
   },
   "optimization": {
     "learning_rate": 0.001,
-    "max_epochs": 1000,
+    "max_epochs": 100,
     "batch_size": 30,
     "random_seed": 0,
-    "patience": 10
+    "patience": 10,
+    "optimizer": "adam"
   }
 }

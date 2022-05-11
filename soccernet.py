@@ -51,7 +51,7 @@ class SoccerNet(data.Dataset):
 
         # obtaining valid frames giving our action list and match list (valid_frames[match][half] --> list)
         self.valid_frames_dict = {}
-        for match in split_matches:
+        for match in self.split_matches:
             match_actions = [self.annotations.loc[(match, i)].reset_index(drop=True) for i in range(2)]
             self.valid_frames_dict[match] = {}
             for half in range(2):
@@ -86,8 +86,8 @@ class SoccerNet(data.Dataset):
                     else:
                         self.emotions[match_path][half][frame] = np.random.randint(1, 10, 128) / 1000000
                         const2 += 1
-            print(f'match: {const}')
-            print(f'match nan: {const2}')
+            # print(f'match: {const}')
+            # print(f'match nan: {const2}')
 
     @staticmethod
     def read_classes(classes_csv_path):
