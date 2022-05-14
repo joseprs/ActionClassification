@@ -2,3 +2,13 @@ italy_serie-a/2016-2017/2016-11-20 - 22-45 AC Milan 2 - 2 Inter/1_HQ
 italy_serie-a/2016-2017/2016-11-26 - 22-45 Empoli 1 - 4 AC Milan/1_HQ
 italy_serie-a/2016-2017/2016-12-04 - 17-00 Lazio 0 - 2 AS Roma/1_HQ
 italy_serie-a/2016-2017/2016-12-12 - 23-00 AS Roma 1 - 0 AC Milan/1_HQ
+italy_serie-a/2016-2017/2017-02-07 - 22-45 AS Roma 4 - 0 Fiorentina/1_HQ
+italy_serie-a/2016-2017/2017-02-12 - 14-30 Crotone 0 - 2 AS Roma/1_HQ
+italy_serie-a/2016-2017/2017-03-19 - 22-45 AS Roma 3 - 1 Sassuolo/1_HQ
+spain_laliga/2014-2015/2015-04-18 - 21-00 Real Madrid 3 - 1 Malaga/1_HQ
+spain_laliga/2014-2015/2015-05-02 - 19-00 Atl. Madrid 0 - 0 Ath Bilbao/1_HQ
+spain_laliga/2014-2015/2015-05-17 - 20-00 Espanyol 1 - 4 Real Madrid/1_HQ
+england_epl/2016-2017/2016-10-29 - 17-00 Tottenham 1 - 1 Leicester/1_HQ
+england_epl/2016-2017/2017-01-15 - 19-00 Manchester United 1 - 1 Liverpool/1_HQ
+europe_uefa-champions-league/2014-2015/2015-05-12 - 21-45 Bayern Munich 3 - 2 Barcelona/1_HQ
+europe_uefa-champions-league/2015-2016/2015-09-16 - 21-45 Chelsea 4 - 0 Maccabi Tel Aviv/1_HQ

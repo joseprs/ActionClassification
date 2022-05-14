@@ -42,17 +42,25 @@ class SoccerNet(data.Dataset):
 
         self.split_matches = split_matches
 
+        edit_annotations = self.annotations.reset_index()
         # obtaining our actions list filtered by our match list (pandas DataFrame)
         self.split_matches_actions = pd.DataFrame()
-        for match in split_matches:
-            match_actions = pd.concat([self.annotations.loc[(match, i)] for i in range(2)]).reset_index()
+        for match in self.split_matches:
+            match_actions = pd.concat([edit_annotations.loc[(edit_annotations['match_path'] == match) &
+                                                            (edit_annotations['half'] == i)] for i in
+                                       range(2)]).drop_duplicates()
+
+            # match_actions = pd.concat([self.annotations.loc[(match, i)] for i in range(2)]).reset_index()
             self.split_matches_actions = pd.concat(
-                [self.split_matches_actions, match_actions]).drop_duplicates().reset_index(drop=True)
+                [self.split_matches_actions, match_actions]).reset_index(drop=True)
 
         # obtaining valid frames giving our action list and match list (valid_frames[match][half] --> list)
         self.valid_frames_dict = {}
         for match in self.split_matches:
-            match_actions = [self.annotations.loc[(match, i)].reset_index(drop=True) for i in range(2)]
+            # match_actions = [self.annotations.loc[(match, i)].reset_index(drop=True) for i in range(2)]
+            match_actions = [edit_annotations.loc[(edit_annotations['match_path'] == match) &
+                                                  (edit_annotations['half'] == i)].reset_index(drop=True) for i in
+                             range(2)]
             self.valid_frames_dict[match] = {}
             for half in range(2):
                 valid_frames = set()

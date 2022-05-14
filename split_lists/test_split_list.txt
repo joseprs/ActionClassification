@@ -2,3 +2,8 @@ spain_laliga/2016-2017/2017-04-05 - 22-30 Leganes 2 - 4 Real Madrid/1_HQ
 germany_bundesliga/2015-2016/2015-12-12 - 17-30 Bayern Munich 2 - 0 Ingolstadt/1_HQ
 germany_bundesliga/2016-2017/2016-09-17 - 16-30 Dortmund 6 - 0 Darmstadt/1_HQ
 germany_bundesliga/2016-2017/2016-10-14 - 21-30 Dortmund 1 - 1 Hertha Berlin/1_HQ
+germany_bundesliga/2016-2017/2017-01-29 - 19-30 1. FSV Mainz 05 1 - 1 Dortmund/1_HQ
+italy_serie-a/2015-2016/2015-09-20 - 13-30 Chievo 0 - 1 Inter/1_HQ
+italy_serie-a/2015-2016/2015-09-20 - 16-00 Genoa 0 - 2 Juventus/1_HQ
+italy_serie-a/2016-2017/2016-08-28 - 21-45 Cagliari 2 - 2 AS Roma/1_HQ
+italy_serie-a/2016-2017/2016-09-16 - 21-45 Sampdoria 0 - 1 AC Milan/1_HQ

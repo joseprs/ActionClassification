@@ -12,9 +12,9 @@ from soccernet import SoccerNet
 from model import ActionClassifier
 
 
-# TODO: netvlad
 # TODO: set a structure (maybe txts...) to keep track of the results of the model (training, val, test) given
 #  different parameters
+# TODO: loss and accuracy plots: if not good --> accuracy and loss plot in every iteration rather than every epoch
 
 def test(loader, model, cuda, verbose=True, data_set='Test', save=None):
     model.eval()
@@ -54,7 +54,6 @@ def train(loader, model, criterion, optimizer, epoch, cuda, log_interval=50, ver
         loss = criterion(output, target)
         loss.backward()
         optimizer.step()
-
         epoch_loss += loss.data.item()
         pred = output.data.max(1, keepdim=True)[1]  # get the index of the max log-probability
         correct += pred.eq(target.data.view_as(pred)).cpu().sum()
@@ -64,7 +63,7 @@ def train(loader, model, criterion, optimizer, epoch, cuda, log_interval=50, ver
                              f'({100. * batch / len(loader):.0f}%)]\tLoss: {loss.data.item():.6f}')
     if verbose:
         accuracy = float(correct) / len(loader.dataset)
-        logging.info(f'Training set: Average loss: {epoch_loss / len(loader.dataset):.4f}, '
+        logging.info(f'Training set: Average loss: {epoch_loss / len(loader):.4f}, '
                      f'Accuracy: {correct}/{len(loader.dataset)} ({100 * accuracy:.1f}%)')
 
     return epoch_loss / len(loader.dataset)
@@ -84,13 +83,17 @@ def main(model_args, opt_args, train_args, main_args):
         # loading training and validation dataset
         with Path(train_args.splits.train[0]).open() as f:
             videos = [Path(line).parent for line in f.readlines()]
+
+        start_train = time.time()
         training_dataset = SoccerNet(train_args.dataset_path, videos, pool=model_args.pool)
         training_loader = DataLoader(training_dataset, batch_size=opt_args.batch_size)
+        logging.info(f'Total Execution Loading train set Time is {time.time() - start_train} seconds')
 
         # calculating ratio of ball out of play
-        train_actions = training_dataset.split_matches_actions
-        print(train_actions['label'].value_counts())
-        print(train_actions['label'].value_counts().max() / len(train_actions))
+        # train_actions = training_dataset.split_matches_actions
+        # print(train_actions['label'].value_counts())
+        # print(f"{train_actions['label'].value_counts().max()}/{len(train_actions)}",
+        #       train_actions['label'].value_counts().max() / len(train_actions))
 
         with Path(train_args.splits.valid[0]).open() as f:
             videos = [Path(line).parent for line in f.readlines()]
@@ -148,9 +151,9 @@ def main(model_args, opt_args, train_args, main_args):
     test_dataset = SoccerNet(train_args.dataset_path, videos, pool=model_args.pool)
 
     # calculating ratio of ball out of play
-    test_actions = test_dataset.split_matches_actions
-    print(test_actions['label'].value_counts())
-    print(test_actions['label'].value_counts().max() / len(test_actions))
+    # test_actions = test_dataset.split_matches_actions
+    # print(test_actions['label'].value_counts())
+    # print(test_actions['label'].value_counts().max() / len(test_actions))
 
     test_loader = DataLoader(test_dataset, batch_size=opt_args.batch_size)
 

@@ -2,7 +2,7 @@
   "model": {
     "frame_rate": 8,
     "window_size": 20,
-    "pool": "MAX"
+    "pool": "netvlad"
   },
   "optimization": {
     "learning_rate": 0.001,
@@ -10,6 +10,6 @@
     "batch_size": 30,
     "random_seed": 0,
     "patience": 10,
-    "optimizer": "adam"
+    "optimizer": "svg"
   }
 }
