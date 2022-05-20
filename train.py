@@ -10,48 +10,60 @@ from util import load_log_configuration
 from torch.utils.data import DataLoader
 from soccernet import SoccerNet
 from model import ActionClassifier
+import numpy as np
+# import plotext as plt
+import matplotlib.pyplot as plt
+from imblearn.combine import SMOTEENN
 
 
 # TODO: set a structure (maybe txts...) to keep track of the results of the model (training, val, test) given
 #  different parameters
-# TODO: loss and accuracy plots: if not good --> accuracy and loss plot in every iteration rather than every epoch
 
-def test(loader, model, cuda, verbose=True, data_set='Test', save=None):
+def test(loader, model, cuda, val_loss_list=None, data_set='Test', verbose=True, save=None):
     model.eval()
     test_loss = 0
     correct = 0
-
     with torch.no_grad():
         for data, target in loader:
-            criterion = torch.nn.CrossEntropyLoss(reduction='sum')
+            criterion = torch.nn.CrossEntropyLoss()
             if cuda:
                 data, target = data.cuda(), target.cuda()
                 criterion = criterion.cuda()
 
             output = model(data)
-            test_loss += criterion(output, target).data.item()  # sum up batch loss
+            loss = criterion(output, target)
+            if val_loss_list is not None:
+                val_loss_list.append(loss.data.item())
+
+            test_loss += loss.data.item()  # sum up batch loss
             pred = output.data.max(1, keepdim=True)[1]  # get the index of the max log-probability
             correct += pred.eq(target.data.view_as(pred)).cpu().sum()
 
-    test_loss /= len(loader.dataset)
+    test_loss /= len(loader)
     accuracy = float(correct) / len(loader.dataset)
     if verbose:
         logging.info(f'\n{data_set} set: Average loss: {test_loss:.4f}, Accuracy: {correct}/{len(loader.dataset)} '
                      f'({100 * accuracy:.1f}%)\n')
+
     return test_loss, accuracy
 
 
-def train(loader, model, criterion, optimizer, epoch, cuda, log_interval=50, verbose=True):
+def train(loader, model, criterion, optimizer, epoch, cuda, loss_list, class_weights, log_interval=100, verbose=True):
     model.train()
     epoch_loss = 0
     correct = 0
+    class_weights = torch.tensor(class_weights)
+    criterion = torch.nn.CrossEntropyLoss(weight=class_weights)
     for batch, (data, target) in enumerate(loader):
         if cuda:
             data, target = data.cuda(), target.cuda()
             criterion = criterion.cuda()
+
         optimizer.zero_grad()
         output = model(data)
+
         loss = criterion(output, target)
+        loss_list.append(loss.data.item())
         loss.backward()
         optimizer.step()
         epoch_loss += loss.data.item()
@@ -61,67 +73,76 @@ def train(loader, model, criterion, optimizer, epoch, cuda, log_interval=50, ver
             if batch % log_interval == 0:
                 logging.info(f'Train Epoch: {epoch} [{batch * len(data)}/{len(loader.dataset)} '
                              f'({100. * batch / len(loader):.0f}%)]\tLoss: {loss.data.item():.6f}')
+
+    accuracy = float(correct) / len(loader.dataset)
     if verbose:
-        accuracy = float(correct) / len(loader.dataset)
         logging.info(f'Training set: Average loss: {epoch_loss / len(loader):.4f}, '
                      f'Accuracy: {correct}/{len(loader.dataset)} ({100 * accuracy:.1f}%)')
 
-    return epoch_loss / len(loader.dataset)
+    return epoch_loss / len(loader), accuracy
 
 
 def main(model_args, opt_args, train_args, main_args):
     # Defining the model and select if it is CUDA or not
-    model = ActionClassifier(pool=model_args.pool)
+    model = ActionClassifier(pool=model_args.pool, window_size_sec=model_args.window_size_sec)
     if main_args.cuda:
         model = model.cuda()
-
     logging.info(model)
-
     checkpoint = main_args.checkpoint_dir
 
     if main_args.train:
         # loading training and validation dataset
         with Path(train_args.splits.train[0]).open() as f:
             videos = [Path(line).parent for line in f.readlines()]
-
-        start_train = time.time()
-        training_dataset = SoccerNet(train_args.dataset_path, videos, pool=model_args.pool)
+        training_dataset = SoccerNet(train_args.dataset_path, videos, window_size_sec=model_args.window_size_sec,
+                                     pool=model_args.pool)
         training_loader = DataLoader(training_dataset, batch_size=opt_args.batch_size)
-        logging.info(f'Total Execution Loading train set Time is {time.time() - start_train} seconds')
 
-        # calculating ratio of ball out of play
-        # train_actions = training_dataset.split_matches_actions
-        # print(train_actions['label'].value_counts())
-        # print(f"{train_actions['label'].value_counts().max()}/{len(train_actions)}",
-        #       train_actions['label'].value_counts().max() / len(train_actions))
+        # calculating train ratio of ball out of play
+        train_actions = training_dataset.split_matches_actions[['label']]
+        train_actions['sum'] = 1
+        print(f"Max appearances and total ratio (train): {train_actions['label'].value_counts().max()}/"
+              f"{len(train_actions)} = {train_actions['label'].value_counts().max() / len(train_actions)}")
+        loss_weights = 1 - np.array(train_actions.groupby('label').sum() / len(train_actions), dtype=np.float32)
+        loss_weights = np.reshape(loss_weights, (len(loss_weights),))
 
         with Path(train_args.splits.valid[0]).open() as f:
             videos = [Path(line).parent for line in f.readlines()]
-        validation_dataset = SoccerNet(train_args.dataset_path, videos, pool=model_args.pool)
+        validation_dataset = SoccerNet(train_args.dataset_path, videos, window_size_sec=model_args.window_size_sec,
+                                       pool=model_args.pool)
         validation_loader = DataLoader(validation_dataset, batch_size=opt_args.batch_size)
+
+        # calculating validation ratio of ball out of play
+        valid_actions = validation_dataset.split_matches_actions
+        print(f"Max appearances and total ratio (validation): {valid_actions['label'].value_counts().max()}/"
+              f"{len(valid_actions)} = {valid_actions['label'].value_counts().max() / len(valid_actions)}")
 
         # Training and Validation parameters
         # setting optimizer
         if opt_args.optimizer.lower() == 'adam':
             optimizer = torch.optim.Adam(model.parameters(), lr=opt_args.learning_rate)
         else:
-            optimizer = torch.optim.SGD(model.parameters(), lr=opt_args.learning_rate, momentum=train_args.momentum)
+            optimizer = torch.optim.SGD(model.parameters(), lr=opt_args.learning_rate, momentum=opt_args.momentum)
 
         # setting the criterion
-        criterion = torch.nn.CrossEntropyLoss()
+        criterion = torch.nn.CrossEntropyLoss()  # maybe delete this line (define criterion inside training)
+
+        # lists to plot
+        train_loss_list = []
+        valid_loss_list = []
 
         # start training
         best_valid_acc = 0
         iteration = 0
         epoch = 1
 
-        # STARTING TRAINING
-
+        # START TRAINING
         logging.info('Starting Training')
         while (epoch < opt_args.max_epochs + 1) and (iteration < opt_args.patience):
 
-            train(training_loader, model, criterion, optimizer, epoch, main_args.cuda)
-            valid_loss, valid_acc = test(validation_loader, model, main_args.cuda, data_set='Validation')
+            train(training_loader, model, criterion, optimizer, epoch, main_args.cuda, train_loss_list, loss_weights)
+            valid_loss, valid_acc = test(validation_loader, model, main_args.cuda, valid_loss_list,
+                                         data_set='Validation')
 
             if not os.path.isdir(checkpoint):
                 os.mkdir(checkpoint)
@@ -146,16 +167,21 @@ def main(model_args, opt_args, train_args, main_args):
                 torch.save(state, f'./{checkpoint}/ckpt.t7')
             epoch += 1
 
+        # plot train/valid loss function or accuracy
+        plt.plot(train_loss_list)
+        plt.title("Train loss")
+        plt.savefig('plots/train_loss_function.png')
+
     with Path(train_args.splits.test[0]).open() as f:
         videos = [Path(line).parent for line in f.readlines()]
-    test_dataset = SoccerNet(train_args.dataset_path, videos, pool=model_args.pool)
-
-    # calculating ratio of ball out of play
-    # test_actions = test_dataset.split_matches_actions
-    # print(test_actions['label'].value_counts())
-    # print(test_actions['label'].value_counts().max() / len(test_actions))
-
+    test_dataset = SoccerNet(train_args.dataset_path, videos, window_size_sec=model_args.window_size_sec,
+                             pool=model_args.pool)
     test_loader = DataLoader(test_dataset, batch_size=opt_args.batch_size)
+
+    # calculating validation ratio of ball out of play
+    test_actions = test_dataset.split_matches_actions
+    print(f"Max appearances and total ratio (test): {test_actions['label'].value_counts().max()}/"
+          f"{len(test_actions)} = {test_actions['label'].value_counts().max() / len(test_actions)}")
 
     state = torch.load(f'./{checkpoint}/ckpt.t7')
     epoch = state['epoch']
@@ -199,7 +225,6 @@ def parse_args():
                         help='Weights to load (default: None)',
                         default=None, type=str)
     parser.add_argument('--no-cuda', dest='cuda', action='store_false')
-    parser.add_argument('--momentum', type=float, default=0.9, metavar='M', help='SGD momentum, for SGD only')
     parser.add_argument('--checkpoint', default='checkpoint', metavar='CHECKPOINT', help='checkpoints directory')
     parser.add_argument('--log_config', required=False,
                         help='Logging configuration file (default: config/log_config.yml)',
@@ -231,7 +256,6 @@ def parse_args():
                      'evaluation_frequency': args.evaluation_frequency,
                      'weights': args.weights,
                      'weights_dir': args.weights_dir,
-                     'momentum': args.momentum,
                      'comment': comment})
 
     main_args = Dict({'train': args.train,

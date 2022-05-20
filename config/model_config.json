@@ -1,8 +1,8 @@
 {
   "model": {
     "frame_rate": 8,
-    "window_size": 20,
-    "pool": "netvlad"
+    "window_size_sec": 10,
+    "pool": "AVG"
   },
   "optimization": {
     "learning_rate": 0.001,
@@ -10,6 +10,7 @@
     "batch_size": 30,
     "random_seed": 0,
     "patience": 10,
-    "optimizer": "svg"
+    "optimizer": "SGD",
+    "momentum": 0.9
   }
 }

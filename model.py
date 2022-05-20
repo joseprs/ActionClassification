@@ -3,7 +3,7 @@ from netvlad import NetVLAD, NetRVLAD
 
 
 class ActionClassifier(torch.nn.Module):
-    def __init__(self, pool="AVG", input_size=128, window_size_sec=20, frame_rate=8, num_classes=17):
+    def __init__(self, pool="MAX", input_size=128, window_size_sec=20, frame_rate=8, num_classes=17):
         # PARAMETERS
         super(ActionClassifier, self).__init__()
         self.input_size = input_size
