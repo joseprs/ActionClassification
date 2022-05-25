@@ -11,18 +11,20 @@ from torch.utils.data import DataLoader
 from soccernet import SoccerNet
 from model import ActionClassifier
 import numpy as np
+from sklearn.metrics import confusion_matrix
 # import plotext as plt
 import matplotlib.pyplot as plt
+import pandas as pd
+import seaborn as sn
 from imblearn.combine import SMOTEENN
 
 
-# TODO: set a structure (maybe txts...) to keep track of the results of the model (training, val, test) given
-#  different parameters
-
-def test(loader, model, cuda, val_loss_list=None, data_set='Test', verbose=True, save=None):
+def test(loader, model, cuda, val_loss_list=None, data_set='Test', verbose=True, class_names=None):
     model.eval()
     test_loss = 0
     correct = 0
+    y_pred = []
+    y_true = []
     with torch.no_grad():
         for data, target in loader:
             criterion = torch.nn.CrossEntropyLoss()
@@ -37,6 +39,8 @@ def test(loader, model, cuda, val_loss_list=None, data_set='Test', verbose=True,
 
             test_loss += loss.data.item()  # sum up batch loss
             pred = output.data.max(1, keepdim=True)[1]  # get the index of the max log-probability
+            y_pred.extend(pred.data.cpu().numpy())
+            y_true.extend(target.data.cpu().numpy())
             correct += pred.eq(target.data.view_as(pred)).cpu().sum()
 
     test_loss /= len(loader)
@@ -44,6 +48,17 @@ def test(loader, model, cuda, val_loss_list=None, data_set='Test', verbose=True,
     if verbose:
         logging.info(f'\n{data_set} set: Average loss: {test_loss:.4f}, Accuracy: {correct}/{len(loader.dataset)} '
                      f'({100 * accuracy:.1f}%)\n')
+
+    if data_set == 'Test':
+        cf_matrix = confusion_matrix(y_true, y_pred)
+        print(np.unique(y_pred, return_counts=True))
+        print(np.unique(y_true, return_counts=True))
+        print(class_names.values())
+        df_cm = pd.DataFrame(cf_matrix / np.sum(cf_matrix) * 10, index=[i for i in class_names.values()],
+                             columns=[i for i in class_names.values()])
+        plt.figure(figsize=(12, 7))
+        sn.heatmap(df_cm, annot=True)
+        plt.savefig('confusion_matrix1.png')
 
     return test_loss, accuracy
 
@@ -95,11 +110,12 @@ def main(model_args, opt_args, train_args, main_args):
         with Path(train_args.splits.train[0]).open() as f:
             videos = [Path(line).parent for line in f.readlines()]
         training_dataset = SoccerNet(train_args.dataset_path, videos, window_size_sec=model_args.window_size_sec,
-                                     pool=model_args.pool)
+                                     pool=model_args.pool, balance=True, th=800)
         training_loader = DataLoader(training_dataset, batch_size=opt_args.batch_size)
 
         # calculating train ratio of ball out of play
         train_actions = training_dataset.split_matches_actions[['label']]
+        print()
         train_actions['sum'] = 1
         print(f"Max appearances and total ratio (train): {train_actions['label'].value_counts().max()}/"
               f"{len(train_actions)} = {train_actions['label'].value_counts().max() / len(train_actions)}")
@@ -109,7 +125,7 @@ def main(model_args, opt_args, train_args, main_args):
         with Path(train_args.splits.valid[0]).open() as f:
             videos = [Path(line).parent for line in f.readlines()]
         validation_dataset = SoccerNet(train_args.dataset_path, videos, window_size_sec=model_args.window_size_sec,
-                                       pool=model_args.pool)
+                                       pool=model_args.pool, balance=True, th=200)
         validation_loader = DataLoader(validation_dataset, batch_size=opt_args.batch_size)
 
         # calculating validation ratio of ball out of play
@@ -121,6 +137,8 @@ def main(model_args, opt_args, train_args, main_args):
         # setting optimizer
         if opt_args.optimizer.lower() == 'adam':
             optimizer = torch.optim.Adam(model.parameters(), lr=opt_args.learning_rate)
+        elif opt_args.optimizer == 'ASGD':
+            optimizer = torch.optim.ASGD(model.parameters(), lr=opt_args.learning_rate)
         else:
             optimizer = torch.optim.SGD(model.parameters(), lr=opt_args.learning_rate, momentum=opt_args.momentum)
 
@@ -175,7 +193,7 @@ def main(model_args, opt_args, train_args, main_args):
     with Path(train_args.splits.test[0]).open() as f:
         videos = [Path(line).parent for line in f.readlines()]
     test_dataset = SoccerNet(train_args.dataset_path, videos, window_size_sec=model_args.window_size_sec,
-                             pool=model_args.pool)
+                             pool=model_args.pool, balance=True, th=200)
     test_loader = DataLoader(test_dataset, batch_size=opt_args.batch_size)
 
     # calculating validation ratio of ball out of play
@@ -190,9 +208,7 @@ def main(model_args, opt_args, train_args, main_args):
     if args.cuda:
         model = model.cuda()
 
-    results = f'./{checkpoint}/{os.path.basename("results")}.csv'
-    print("Saving results in {}".format(results))
-    test(test_loader, model, main_args.cuda, save=results)
+    test(test_loader, model, main_args.cuda, class_names=test_dataset.classes)
 
 
 def parse_args():

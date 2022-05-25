@@ -22,7 +22,7 @@ def features_to_dict(dataframe):
 class SoccerNet(data.Dataset):
 
     def __init__(self, data_dir: Path, split_matches: List[Path], window_size_sec=20, frame_rate=8, pool='MAX',
-                 **kwargs):
+                 balance=False, th=None):
         self.path = data_dir
         self.pool = np.max if pool == "MAX" else np.mean
 
@@ -39,6 +39,7 @@ class SoccerNet(data.Dataset):
         self.window_size_sec = window_size_sec
         self.frame_rate = frame_rate
         self.frames_per_window = self.window_size_sec * self.frame_rate
+        self.balance_threshold = th
 
         self.split_matches = split_matches
 
@@ -51,6 +52,16 @@ class SoccerNet(data.Dataset):
                                        range(2)]).drop_duplicates()
             self.split_matches_actions = pd.concat(
                 [self.split_matches_actions, match_actions]).reset_index(drop=True)
+
+        # obtaining a balanced action list given a threshold
+        if balance:
+            balanced_annotations = pd.DataFrame()
+            for label in range(1, self.num_classes + 1):
+                class_annotations = self.split_matches_actions.loc[self.split_matches_actions['label'] == label]
+                if len(class_annotations) > self.balance_threshold:
+                    class_annotations = class_annotations.sample(n=self.balance_threshold, random_state=0)
+                balanced_annotations = pd.concat([balanced_annotations, class_annotations])
+            self.split_matches_actions = balanced_annotations.reset_index(drop=True)
 
         # obtaining valid frames giving our action list and match list (valid_frames[match][half] --> list)
         self.valid_frames_dict = {}
@@ -68,7 +79,6 @@ class SoccerNet(data.Dataset):
                     last_action_frame = frame_num + (int(self.window_size_sec / 2) * frame_rate)
                     for frame_id in range(first_action_frame, last_action_frame + 1):
                         valid_frames.add(frame_id)
-
                 self.valid_frames_dict[match][half] = [index for index in sorted(valid_frames)]
 
         # obtaining emotions list (emotions[match][half][frame] --> pooled emotion frame)
@@ -82,7 +92,7 @@ class SoccerNet(data.Dataset):
                 self.emotions[match_path][half] = {}
                 for frame in self.valid_frames_dict[match_path][half]:
                     if f'{frame:05}' in match_emotion_features[half].keys():
-                        frame_emotion_vectors = [info[2] * 50 for id, info in
+                        frame_emotion_vectors = [info[2] for id, info in
                                                  match_emotion_features[half][f'{frame:05}'].items()]
                         self.emotions[match_path][half][frame] = self.pool(np.asarray(frame_emotion_vectors), axis=0)
                     else:
@@ -146,7 +156,7 @@ class SoccerNet(data.Dataset):
                                   get_frame(position, self.frame_rate) + int(self.frames_per_window / 2) + 1)
         emotions_input = [self.emotions[match_path][half][index] for index in frame_indices]
         emotions_input = np.array(emotions_input, dtype=np.float32)
-        return emotions_input, label - 1  # REVIEW: this is a test
+        return emotions_input, label - 1
 
     def __len__(self):
         return len(self.split_matches_actions)
