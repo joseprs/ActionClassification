@@ -6,7 +6,7 @@ from addict import Dict
 import json
 from argparse import ArgumentParser
 from pathlib import Path
-from util import load_log_configuration
+from util import load_log_configuration, show_confusion_matrix
 from torch.utils.data import DataLoader
 from soccernet import SoccerNet
 from model import ActionClassifier
@@ -28,6 +28,7 @@ def test(loader, model, cuda, val_loss_list=None, data_set='Test', verbose=True,
     with torch.no_grad():
         for data, target in loader:
             criterion = torch.nn.CrossEntropyLoss()
+
             if cuda:
                 data, target = data.cuda(), target.cuda()
                 criterion = criterion.cuda()
@@ -50,15 +51,17 @@ def test(loader, model, cuda, val_loss_list=None, data_set='Test', verbose=True,
                      f'({100 * accuracy:.1f}%)\n')
 
     if data_set == 'Test':
-        cf_matrix = confusion_matrix(y_true, y_pred)
+        cm = confusion_matrix(y_true, y_pred)
         print(np.unique(y_pred, return_counts=True))
         print(np.unique(y_true, return_counts=True))
-        print(class_names.values())
-        df_cm = pd.DataFrame(cf_matrix / np.sum(cf_matrix) * 10, index=[i for i in class_names.values()],
-                             columns=[i for i in class_names.values()])
-        plt.figure(figsize=(12, 7))
-        sn.heatmap(df_cm, annot=True)
-        plt.savefig('confusion_matrix1.png')
+        print(cm.diagonal()/cm.sum(axis=1))
+
+        # df_cm = pd.DataFrame(cf_matrix / cf_matrix.sum(axis=1), index=[i for i in class_names.values()],
+        #                      columns=[i for i in class_names.values()])
+        # plt.figure(figsize=(12, 7))
+        # sn.heatmap(df_cm, annot=True)
+        # plt.savefig('confusion_matrix1.png')
+        # show_confusion_matrix(y_true, y_pred, list(class_names.values()))
 
     return test_loss, accuracy
 
@@ -84,10 +87,10 @@ def train(loader, model, criterion, optimizer, epoch, cuda, loss_list, class_wei
         epoch_loss += loss.data.item()
         pred = output.data.max(1, keepdim=True)[1]  # get the index of the max log-probability
         correct += pred.eq(target.data.view_as(pred)).cpu().sum()
-        if verbose:
-            if batch % log_interval == 0:
-                logging.info(f'Train Epoch: {epoch} [{batch * len(data)}/{len(loader.dataset)} '
-                             f'({100. * batch / len(loader):.0f}%)]\tLoss: {loss.data.item():.6f}')
+
+        if verbose and (batch % log_interval) == 0:
+            logging.info(f'Train Epoch: {epoch} [{batch * len(data)}/{len(loader.dataset)} '
+                         f'({100. * batch / len(loader):.0f}%)]\tLoss: {loss.data.item():.6f}')
 
     accuracy = float(correct) / len(loader.dataset)
     if verbose:
@@ -110,12 +113,11 @@ def main(model_args, opt_args, train_args, main_args):
         with Path(train_args.splits.train[0]).open() as f:
             videos = [Path(line).parent for line in f.readlines()]
         training_dataset = SoccerNet(train_args.dataset_path, videos, window_size_sec=model_args.window_size_sec,
-                                     pool=model_args.pool, balance=True, th=800)
+                                     pool=model_args.pool, balance=False, th=800)
         training_loader = DataLoader(training_dataset, batch_size=opt_args.batch_size)
 
         # calculating train ratio of ball out of play
         train_actions = training_dataset.split_matches_actions[['label']]
-        print()
         train_actions['sum'] = 1
         print(f"Max appearances and total ratio (train): {train_actions['label'].value_counts().max()}/"
               f"{len(train_actions)} = {train_actions['label'].value_counts().max() / len(train_actions)}")
@@ -125,7 +127,7 @@ def main(model_args, opt_args, train_args, main_args):
         with Path(train_args.splits.valid[0]).open() as f:
             videos = [Path(line).parent for line in f.readlines()]
         validation_dataset = SoccerNet(train_args.dataset_path, videos, window_size_sec=model_args.window_size_sec,
-                                       pool=model_args.pool, balance=True, th=200)
+                                       pool=model_args.pool, balance=False, th=200)
         validation_loader = DataLoader(validation_dataset, batch_size=opt_args.batch_size)
 
         # calculating validation ratio of ball out of play
@@ -186,14 +188,14 @@ def main(model_args, opt_args, train_args, main_args):
             epoch += 1
 
         # plot train/valid loss function or accuracy
-        plt.plot(train_loss_list)
-        plt.title("Train loss")
-        plt.savefig('plots/train_loss_function.png')
+        # plt.plot(train_loss_list)
+        # plt.title("Train loss")
+        # plt.savefig('plots/train_loss_function.png')
 
     with Path(train_args.splits.test[0]).open() as f:
         videos = [Path(line).parent for line in f.readlines()]
     test_dataset = SoccerNet(train_args.dataset_path, videos, window_size_sec=model_args.window_size_sec,
-                             pool=model_args.pool, balance=True, th=200)
+                             pool=model_args.pool, balance=False, th=200)
     test_loader = DataLoader(test_dataset, batch_size=opt_args.batch_size)
 
     # calculating validation ratio of ball out of play
@@ -201,10 +203,10 @@ def main(model_args, opt_args, train_args, main_args):
     print(f"Max appearances and total ratio (test): {test_actions['label'].value_counts().max()}/"
           f"{len(test_actions)} = {test_actions['label'].value_counts().max() / len(test_actions)}")
 
-    state = torch.load(f'./{checkpoint}/ckpt.t7')
-    epoch = state['epoch']
-    logging.info(f'\n\nTesting model {checkpoint} (epoch {epoch})')
-    model = torch.load(f'./{checkpoint}/model{epoch:03d}.t7')
+    # state = torch.load(f'./{checkpoint}/ckpt.t7')
+    # epoch = state['epoch']
+    # logging.info(f'\n\nTesting model {checkpoint} (epoch {epoch})')
+    # model = torch.load(f'./{checkpoint}/model{epoch:03d}.t7')
     if args.cuda:
         model = model.cuda()
 
@@ -299,6 +301,7 @@ if __name__ == '__main__':
     logging.info(args)
 
     args.main.cuda = args.main.cuda and torch.cuda.is_available()
+    args.main.cuda = False
     torch.manual_seed(args.optimization.random_seed)
     if args.main.cuda:
         torch.cuda.manual_seed(args.optimization.random_seed)

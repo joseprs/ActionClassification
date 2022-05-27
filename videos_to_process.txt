@@ -1,15 +1,3 @@
-../../../mnt/DATA/datasets/soccernet/england_epl/2015-2016/2015-10-03 - 19-30 Chelsea 1 - 3 Southampton/1_HQ.mkv
-../../../mnt/DATA/datasets/soccernet/england_epl/2015-2016/2015-10-03 - 19-30 Chelsea 1 - 3 Southampton/2_HQ.mkv
-../../../mnt/DATA/datasets/soccernet/england_epl/2015-2016/2015-10-24 - 17-00 West Ham 2 - 1 Chelsea/1_HQ.mkv
-../../../mnt/DATA/datasets/soccernet/england_epl/2015-2016/2015-10-24 - 17-00 West Ham 2 - 1 Chelsea/2_HQ.mkv
-../../../mnt/DATA/datasets/soccernet/england_epl/2015-2016/2015-11-07 - 20-30 Stoke City 1 - 0 Chelsea/1_HQ.mkv
-../../../mnt/DATA/datasets/soccernet/england_epl/2015-2016/2015-11-07 - 20-30 Stoke City 1 - 0 Chelsea/2_HQ.mkv
-../../../mnt/DATA/datasets/soccernet/england_epl/2015-2016/2015-11-21 - 20-30 Manchester City 1 - 4 Liverpool/1_HQ.mkv
-../../../mnt/DATA/datasets/soccernet/england_epl/2015-2016/2015-11-21 - 20-30 Manchester City 1 - 4 Liverpool/2_HQ.mkv
-../../../mnt/DATA/datasets/soccernet/england_epl/2015-2016/2015-11-29 - 15-00 Tottenham 0 - 0 Chelsea/1_HQ.mkv
-../../../mnt/DATA/datasets/soccernet/england_epl/2015-2016/2015-11-29 - 15-00 Tottenham 0 - 0 Chelsea/2_HQ.mkv
-../../../mnt/DATA/datasets/soccernet/england_epl/2016-2017/2016-11-06 - 17-15 Liverpool 6 - 1 Watford/1_HQ.mkv
-../../../mnt/DATA/datasets/soccernet/england_epl/2016-2017/2016-11-06 - 17-15 Liverpool 6 - 1 Watford/2_HQ.mkv
 ../../../mnt/DATA/datasets/soccernet/england_epl/2016-2017/2017-01-31 - 23-00 Liverpool 1 - 1 Chelsea/1_HQ.mkv
 ../../../mnt/DATA/datasets/soccernet/england_epl/2016-2017/2017-01-31 - 23-00 Liverpool 1 - 1 Chelsea/2_HQ.mkv
 ../../../mnt/DATA/datasets/soccernet/england_epl/2016-2017/2017-04-26 - 21-45 Arsenal 1 - 0 Leicester/1_HQ.mkv

@@ -22,7 +22,7 @@ def features_to_dict(dataframe):
 class SoccerNet(data.Dataset):
 
     def __init__(self, data_dir: Path, split_matches: List[Path], window_size_sec=20, frame_rate=8, pool='MAX',
-                 balance=False, th=None):
+                 balance=False, th=None, filter_classes=True):
         self.path = data_dir
         self.pool = np.max if pool == "MAX" else np.mean
 
@@ -31,7 +31,10 @@ class SoccerNet(data.Dataset):
 
         classes_csv_path = self.path.joinpath(f'classes_v2.csv')
         self.classes = SoccerNet.read_classes(classes_csv_path)
-        self.num_classes = len(self.classes)
+        self.class_filter = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
+        self.class_filter = [1, 4, 5, 12] if filter_classes else self.class_filter  # from 1 to 17
+        self.class_dict = dict([(j, k) for k, j in enumerate(self.class_filter)])
+        self.num_classes = len(self.class_dict)
 
         self.annotations = SoccerNet.read_annotations(self.path.joinpath(f'annotations_v2.csv'))
         self.half_matches = [(mp, h) for mp, h in self.annotations.index.unique()]
@@ -48,8 +51,9 @@ class SoccerNet(data.Dataset):
         self.split_matches_actions = pd.DataFrame()
         for match in self.split_matches:
             match_actions = pd.concat([edit_annotations.loc[(edit_annotations['match_path'] == match) &
-                                                            (edit_annotations['half'] == i)] for i in
-                                       range(2)]).drop_duplicates()
+                                                            (edit_annotations['half'] == i) &
+                                                            (edit_annotations['label'].isin(self.class_filter))]
+                                       for i in range(2)]).drop_duplicates()
             self.split_matches_actions = pd.concat(
                 [self.split_matches_actions, match_actions]).reset_index(drop=True)
 
@@ -67,8 +71,10 @@ class SoccerNet(data.Dataset):
         self.valid_frames_dict = {}
         for match in self.split_matches:
             match_actions = [edit_annotations.loc[(edit_annotations['match_path'] == match) &
-                                                  (edit_annotations['half'] == i)].reset_index(drop=True) for i in
-                             range(2)]
+                                                  (edit_annotations['half'] == i) &
+                                                  (edit_annotations['label'].isin(self.class_filter))].reset_index(
+                drop=True) for i in range(2)]
+
             self.valid_frames_dict[match] = {}
             for half in range(2):
                 valid_frames = set()
@@ -85,7 +91,7 @@ class SoccerNet(data.Dataset):
         self.emotions = {}
         for match_path in self.split_matches:
             emotion_features_path = self.path.joinpath(match_path, 'face_extraction_results.npy')
-            match_emotion_features = np.load(emotion_features_path, allow_pickle=True)
+            match_emotion_features = np.load(str(emotion_features_path), allow_pickle=True)
             match_emotion_features = features_to_dict(match_emotion_features)
             self.emotions[match_path] = {}
             for half in range(2):
@@ -96,7 +102,7 @@ class SoccerNet(data.Dataset):
                                                  match_emotion_features[half][f'{frame:05}'].items()]
                         self.emotions[match_path][half][frame] = self.pool(np.asarray(frame_emotion_vectors), axis=0)
                     else:
-                        self.emotions[match_path][half][frame] = np.random.randint(1, 10, 128) / 10000000
+                        self.emotions[match_path][half][frame] = None  # np.random.randint(1, 10, 128) / 10000000
 
     @staticmethod
     def read_classes(classes_csv_path):
@@ -154,9 +160,14 @@ class SoccerNet(data.Dataset):
 
         frame_indices = np.arange(get_frame(position, self.frame_rate) - int(self.frames_per_window / 2),
                                   get_frame(position, self.frame_rate) + int(self.frames_per_window / 2) + 1)
-        emotions_input = [self.emotions[match_path][half][index] for index in frame_indices]
+        emotions_input = [self.emotions[match_path][half][index] for index in frame_indices if
+                          self.emotions[match_path][half][index] is not None]
+        if len(emotions_input) == 0:
+            emotions_input = np.random.randint(1, 10, 128) / 10000000
+        else:
+            emotions_input = self.pool(np.asarray(emotions_input), axis=0)
         emotions_input = np.array(emotions_input, dtype=np.float32)
-        return emotions_input, label - 1
+        return emotions_input, self.class_dict[label]
 
     def __len__(self):
         return len(self.split_matches_actions)

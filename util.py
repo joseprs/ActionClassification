@@ -3,11 +3,17 @@ from datetime import datetime
 from pathlib import Path
 import yaml
 from retinaface.commons import postprocess
-import numpy as np
 import cv2
 from deepface.commons.functions import load_image
 from tensorflow.keras.preprocessing import image
-from addict import Dict
+import matplotlib as mpl
+import matplotlib.gridspec as gridspec
+import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
+import sklearn.metrics as metrics
+from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.colors import ListedColormap
 
 
 def load_log_configuration(log_config: Path, logs_dir: Path, log_fname_format='%Y-%m-%d_%H-%M-%S.log'):
@@ -227,3 +233,68 @@ def get_detected_facial_areas(face_detections_frame):
         score = face_detections_frame[face]['score']
         score_list.append(score)
     return face_list, score_list
+
+
+def show_confusion_matrix(true_labels, predicted_labels, labels, figsize=None,
+                          normalize=True, annot=False, cmap=None,
+                          square=False, linecolor='white', ticks_size=None,
+                          linewidths=0, show_yticks=True, show_xticks=False,
+                          cbar=True, cbar_kws=None):
+    if not figsize:
+        figsize = (5, 5)
+
+    if type(true_labels[0]) == type(labels[0]):
+        cm = metrics.confusion_matrix(true_labels, predicted_labels, labels)
+    else:
+        cm = metrics.confusion_matrix(true_labels, predicted_labels, np.arange(np.size(labels)))
+
+    # normalize confusion matrix
+    if normalize:
+        num_instances_per_class = cm.sum(axis=1)
+        zero_indices = num_instances_per_class == 0
+        if any(zero_indices):
+            num_instances_per_class[zero_indices] = 1
+            warnings.warn('One or more classes does not have instances')
+        cm = cm / num_instances_per_class[:, np.newaxis]
+        vmax = 1.
+    else:
+        vmax = np.max(cm)
+
+    if not cmap:
+        cmap = list(sns.color_palette("RdBu_r", 200).as_hex())
+        cmap = ListedColormap(cmap)
+
+    fig = plt.figure(figsize=figsize)
+    plt.clf()
+    ax = fig.add_subplot(111)
+    ax.set_aspect(1)
+
+    if show_yticks:
+        yticklabels = labels
+    else:
+        yticklabels = []
+
+    if show_xticks:
+        xticklabels = labels
+    else:
+        xticklabels = []
+
+    ax = sns.heatmap(cm, annot=annot, cmap=cmap, linewidths=linewidths, xticklabels=xticklabels,
+                     yticklabels=yticklabels, square=square,
+                     linecolor=linecolor, vmax=vmax, cbar=cbar,
+                     cbar_kws=cbar_kws)
+
+    if show_yticks:
+        for ticklabel in ax.get_yaxis().get_ticklabels():
+            ticklabel.set_rotation('horizontal')
+            if ticks_size:
+                ticklabel.set_fontsize(ticks_size)
+
+    if show_xticks:
+        ax.xaxis.tick_top()
+        for ticklabel in ax.get_xaxis().get_ticklabels():
+            ticklabel.set_rotation('vertical')
+            if ticks_size:
+                ticklabel.set_fontsize(ticks_size)
+
+    return fig, ax

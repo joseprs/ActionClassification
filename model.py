@@ -7,7 +7,7 @@ from netvlad import NetVLAD, NetRVLAD
 # TODO: stride?
 
 class ActionClassifier(torch.nn.Module):
-    def __init__(self, pool="MAX", input_size=128, window_size_sec=20, frame_rate=8, num_classes=17):
+    def __init__(self, pool="MAX", input_size=128, window_size_sec=20, frame_rate=8, num_classes=4):
         # PARAMETERS
         super(ActionClassifier, self).__init__()
         self.input_size = input_size
@@ -60,7 +60,7 @@ class ActionClassifier(torch.nn.Module):
         self.softmax = torch.nn.Softmax(dim=1)
 
     def forward(self, x):
-
+        """
         if self.pool == 'MAX' or self.pool == 'AVG':
             x = self.pool_layer(x.permute(0, 2, 1)).squeeze(-1)
 
@@ -80,6 +80,7 @@ class ActionClassifier(torch.nn.Module):
             x_before_pooled = self.pool_layer_before(x[:, :half_frames, :])
             x_pooled = self.pool_layer_after(x[:, half_frames:, :])
             x = torch.cat((x_before_pooled, x_pooled), dim=1)
+        """
 
         x = self.fc(x)
         x = self.softmax(x)

@@ -95,3 +95,7 @@
 ../../../mnt/DATA/datasets/soccernet/spain_laliga/2016-2017/2017-03-18 - 18-15 Ath Bilbao 1 - 2 Real Madrid/1_HQ
 ../../../mnt/DATA/datasets/soccernet/spain_laliga/2016-2017/2017-04-02 - 21-45 Granada CF 1 - 4 Barcelona/1_HQ
 ../../../mnt/DATA/datasets/soccernet/spain_laliga/2016-2017/2017-04-05 - 22-30 Leganes 2 - 4 Real Madrid/1_HQ
+../../../mnt/DATA/datasets/soccernet/england_epl/2015-2016/2015-08-16 - 18-00 Manchester City 3 - 0 Chelsea/1_HQ
+../../../mnt/DATA/datasets/soccernet/england_epl/2015-2016/2015-08-29 - 17-00 Liverpool 0 - 3 West Ham/1_HQ
+../../../mnt/DATA/datasets/soccernet/england_epl/2015-2016/2015-09-12 - 14-45 Everton 3 - 1 Chelsea/1_HQ
+../../../mnt/DATA/datasets/soccernet/england_epl/2015-2016/2015-09-26 - 17-00 Leicester 2 - 5 Arsenal/1_HQ
