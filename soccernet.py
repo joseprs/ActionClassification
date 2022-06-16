@@ -22,7 +22,7 @@ def features_to_dict(dataframe):
 class SoccerNet(data.Dataset):
 
     def __init__(self, data_dir: Path, split_matches: List[Path], window_size_sec=20, frame_rate=8, pool='MAX',
-                 balance=False, th=None, filter_classes=True):
+                 balance=False, balance_th=None, filter_classes=True, face_th=0):
         self.path = data_dir
         self.pool = np.max if pool == "MAX" else np.mean
 
@@ -32,8 +32,9 @@ class SoccerNet(data.Dataset):
         classes_csv_path = self.path.joinpath(f'classes_v2.csv')
         self.classes = SoccerNet.read_classes(classes_csv_path)
         self.class_filter = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
-        self.class_filter = [1, 4, 5, 12] if filter_classes else self.class_filter  # from 1 to 17
+        self.class_filter = [1, 3, 4, 6, 7, 11, 13, 14] if filter_classes else self.class_filter  # from 1 to 17
         self.class_dict = dict([(j, k) for k, j in enumerate(self.class_filter)])
+        self.class_names = dict([(index, self.classes[m - 1]) for index, m in (enumerate(self.class_filter))])
         self.num_classes = len(self.class_dict)
 
         self.annotations = SoccerNet.read_annotations(self.path.joinpath(f'annotations_v2.csv'))
@@ -42,7 +43,8 @@ class SoccerNet(data.Dataset):
         self.window_size_sec = window_size_sec
         self.frame_rate = frame_rate
         self.frames_per_window = self.window_size_sec * self.frame_rate
-        self.balance_threshold = th
+        self.balance_threshold = balance_th
+        self.face_th = face_th
 
         self.split_matches = split_matches
 
@@ -99,10 +101,31 @@ class SoccerNet(data.Dataset):
                 for frame in self.valid_frames_dict[match_path][half]:
                     if f'{frame:05}' in match_emotion_features[half].keys():
                         frame_emotion_vectors = [info[2] for id, info in
-                                                 match_emotion_features[half][f'{frame:05}'].items()]
-                        self.emotions[match_path][half][frame] = self.pool(np.asarray(frame_emotion_vectors), axis=0)
+                                                 match_emotion_features[half][f'{frame:05}'].items() if
+                                                 info[0] > self.face_th]
+                        if len(frame_emotion_vectors) == 0:
+                            self.emotions[match_path][half][frame] = None
+                        else:
+                            self.emotions[match_path][half][frame] = self.pool(np.asarray(frame_emotion_vectors),
+                                                                               axis=0)
                     else:
                         self.emotions[match_path][half][frame] = None  # np.random.randint(1, 10, 128) / 10000000
+
+        # check empty actions (in report, say how many empty actions)
+        empty_actions_index = []
+        empty_count = 0
+        for index, action in self.split_matches_actions.iterrows():
+            frame_indices = np.arange(get_frame(action['position'], self.frame_rate) - int(self.frames_per_window / 2),
+                                      get_frame(action['position'], self.frame_rate) + int(
+                                          self.frames_per_window / 2) + 1)
+            emotions_input = [self.emotions[action['match_path']][action['half']][index] for index in frame_indices if
+                              self.emotions[action['match_path']][action['half']][index] is not None]
+            if len(emotions_input) == 0:
+                empty_count += 1
+                empty_actions_index.extend([index])
+        print(f'{empty_count} actions removed because they are faceless')
+        self.split_matches_actions = self.split_matches_actions[
+            ~self.split_matches_actions.index.isin(empty_actions_index)].reset_index(drop=True)
 
     @staticmethod
     def read_classes(classes_csv_path):

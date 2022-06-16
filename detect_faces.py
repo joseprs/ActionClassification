@@ -177,7 +177,7 @@ if __name__ == '__main__':
             os.remove(frames_dir.joinpath(f'{frame:05}.jpg'))
 
         f = FaceFeeder(frames_dir, valid_frames, args.batch_size)  # 37
-        n_batches = f.__len__()
+        n_batches = len(f)
         logging.info(f'Number of batches to process: {n_batches}')
 
         # dict where we will put all our faces, for every frame
@@ -185,7 +185,7 @@ if __name__ == '__main__':
 
         for batch_num in tqdm(range(n_batches), desc='Batches Progress', leave=True, position=0):
 
-            batch, im_infos, im_scales = f.__getitem__(batch_num)
+            batch, im_infos, im_scales = f[batch_num]
             frame_ids = f.batch_list[batch_num]
 
             outputs = model(batch)

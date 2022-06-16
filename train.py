@@ -19,7 +19,7 @@ import seaborn as sn
 from imblearn.combine import SMOTEENN
 
 
-def test(loader, model, cuda, val_loss_list=None, data_set='Test', verbose=True, class_names=None):
+def test(loader, model, cuda, data_set='Test', verbose=True, class_names=None, num_classes=17):
     model.eval()
     test_loss = 0
     correct = 0
@@ -35,9 +35,6 @@ def test(loader, model, cuda, val_loss_list=None, data_set='Test', verbose=True,
 
             output = model(data)
             loss = criterion(output, target)
-            if val_loss_list is not None:
-                val_loss_list.append(loss.data.item())
-
             test_loss += loss.data.item()  # sum up batch loss
             pred = output.data.max(1, keepdim=True)[1]  # get the index of the max log-probability
             y_pred.extend(pred.data.cpu().numpy())
@@ -54,19 +51,22 @@ def test(loader, model, cuda, val_loss_list=None, data_set='Test', verbose=True,
         cm = confusion_matrix(y_true, y_pred)
         print(np.unique(y_pred, return_counts=True))
         print(np.unique(y_true, return_counts=True))
-        print(cm.diagonal()/cm.sum(axis=1))
-
-        # df_cm = pd.DataFrame(cf_matrix / cf_matrix.sum(axis=1), index=[i for i in class_names.values()],
-        #                      columns=[i for i in class_names.values()])
-        # plt.figure(figsize=(12, 7))
-        # sn.heatmap(df_cm, annot=True)
-        # plt.savefig('confusion_matrix1.png')
+        print(cm.diagonal() / cm.sum(axis=1))
+        print(cm)  # / cm.sum(axis=1)
+        print(cm.sum(axis=1))
+        print(cm/cm.sum(axis=1)[np.newaxis].T)
+        df_cm = pd.DataFrame(cm/cm.sum(axis=1)[np.newaxis].T, index=[i for i in class_names.values()],
+                             columns=[i for i in class_names.values()])
+        # class_names.values()
+        plt.figure(figsize=(12, 7))
+        sn.heatmap(df_cm, annot=True)
+        plt.savefig('confusion_matrix.png')
         # show_confusion_matrix(y_true, y_pred, list(class_names.values()))
 
     return test_loss, accuracy
 
 
-def train(loader, model, criterion, optimizer, epoch, cuda, loss_list, class_weights, log_interval=100, verbose=True):
+def train(loader, model, criterion, optimizer, epoch, cuda, class_weights, log_interval=100, verbose=True):
     model.train()
     epoch_loss = 0
     correct = 0
@@ -81,7 +81,6 @@ def train(loader, model, criterion, optimizer, epoch, cuda, loss_list, class_wei
         output = model(data)
 
         loss = criterion(output, target)
-        loss_list.append(loss.data.item())
         loss.backward()
         optimizer.step()
         epoch_loss += loss.data.item()
@@ -102,7 +101,7 @@ def train(loader, model, criterion, optimizer, epoch, cuda, loss_list, class_wei
 
 def main(model_args, opt_args, train_args, main_args):
     # Defining the model and select if it is CUDA or not
-    model = ActionClassifier(pool=model_args.pool, window_size_sec=model_args.window_size_sec)
+    model = ActionClassifier(pool=model_args.pool, window_size_sec=model_args.window_size_sec, num_classes=8)
     if main_args.cuda:
         model = model.cuda()
     logging.info(model)
@@ -113,21 +112,26 @@ def main(model_args, opt_args, train_args, main_args):
         with Path(train_args.splits.train[0]).open() as f:
             videos = [Path(line).parent for line in f.readlines()]
         training_dataset = SoccerNet(train_args.dataset_path, videos, window_size_sec=model_args.window_size_sec,
-                                     pool=model_args.pool, balance=False, th=800)
+                                     pool=model_args.pool, balance=False, balance_th=800,
+                                     face_th=model_args.face_area_th)
         training_loader = DataLoader(training_dataset, batch_size=opt_args.batch_size)
-
         # calculating train ratio of ball out of play
         train_actions = training_dataset.split_matches_actions[['label']]
         train_actions['sum'] = 1
         print(f"Max appearances and total ratio (train): {train_actions['label'].value_counts().max()}/"
               f"{len(train_actions)} = {train_actions['label'].value_counts().max() / len(train_actions)}")
-        loss_weights = 1 - np.array(train_actions.groupby('label').sum() / len(train_actions), dtype=np.float32)
-        loss_weights = np.reshape(loss_weights, (len(loss_weights),))
+        loss_weights1 = 1 - np.array(train_actions.groupby('label').sum() / len(train_actions), dtype=np.float32)
+
+        loss_weights2 = 1 / np.array(train_actions.groupby('label').sum(), dtype=np.float32)
+
+        loss_weights1 = np.reshape(loss_weights1, (len(loss_weights1),))
+        loss_weights2 = np.reshape(loss_weights2, (len(loss_weights2),))
 
         with Path(train_args.splits.valid[0]).open() as f:
             videos = [Path(line).parent for line in f.readlines()]
         validation_dataset = SoccerNet(train_args.dataset_path, videos, window_size_sec=model_args.window_size_sec,
-                                       pool=model_args.pool, balance=False, th=200)
+                                       pool=model_args.pool, balance=False, balance_th=200,
+                                       face_th=model_args.face_area_th)
         validation_loader = DataLoader(validation_dataset, batch_size=opt_args.batch_size)
 
         # calculating validation ratio of ball out of play
@@ -160,9 +164,11 @@ def main(model_args, opt_args, train_args, main_args):
         logging.info('Starting Training')
         while (epoch < opt_args.max_epochs + 1) and (iteration < opt_args.patience):
 
-            train(training_loader, model, criterion, optimizer, epoch, main_args.cuda, train_loss_list, loss_weights)
-            valid_loss, valid_acc = test(validation_loader, model, main_args.cuda, valid_loss_list,
-                                         data_set='Validation')
+            train_loss, train_acc = train(training_loader, model, criterion, optimizer, epoch, main_args.cuda,
+                                          loss_weights2)
+            valid_loss, valid_acc = test(validation_loader, model, main_args.cuda, data_set='Validation')
+            train_loss_list.append(train_loss)
+            valid_loss_list.append(valid_loss)
 
             if not os.path.isdir(checkpoint):
                 os.mkdir(checkpoint)
@@ -188,14 +194,16 @@ def main(model_args, opt_args, train_args, main_args):
             epoch += 1
 
         # plot train/valid loss function or accuracy
-        # plt.plot(train_loss_list)
-        # plt.title("Train loss")
-        # plt.savefig('plots/train_loss_function.png')
+        plt.plot(train_loss_list, label='Train loss')
+        plt.plot(valid_loss_list, label='Validation loss')
+        plt.title("Train and Validation loss")
+        plt.legend()
+        plt.savefig('plots/loss_function.png')
 
     with Path(train_args.splits.test[0]).open() as f:
         videos = [Path(line).parent for line in f.readlines()]
     test_dataset = SoccerNet(train_args.dataset_path, videos, window_size_sec=model_args.window_size_sec,
-                             pool=model_args.pool, balance=False, th=200)
+                             pool=model_args.pool, balance=False, balance_th=200, face_th=model_args.face_area_th)
     test_loader = DataLoader(test_dataset, batch_size=opt_args.batch_size)
 
     # calculating validation ratio of ball out of play
@@ -203,14 +211,14 @@ def main(model_args, opt_args, train_args, main_args):
     print(f"Max appearances and total ratio (test): {test_actions['label'].value_counts().max()}/"
           f"{len(test_actions)} = {test_actions['label'].value_counts().max() / len(test_actions)}")
 
-    # state = torch.load(f'./{checkpoint}/ckpt.t7')
-    # epoch = state['epoch']
-    # logging.info(f'\n\nTesting model {checkpoint} (epoch {epoch})')
-    # model = torch.load(f'./{checkpoint}/model{epoch:03d}.t7')
+    state = torch.load(f'./{checkpoint}/ckpt.t7')
+    epoch = state['epoch']
+    logging.info(f'\n\nTesting model {checkpoint} (epoch {epoch})')
+    model = torch.load(f'./{checkpoint}/model{epoch:03d}.t7')
     if args.cuda:
         model = model.cuda()
 
-    test(test_loader, model, main_args.cuda, class_names=test_dataset.classes)
+    test(test_loader, model, main_args.cuda, class_names=test_dataset.class_names, num_classes=test_dataset.num_classes)
 
 
 def parse_args():
@@ -229,7 +237,6 @@ def parse_args():
     parser.add_argument('--split_test', nargs='+', dest='test_splits',
                         help='list of split for testing (default: [test])',
                         default=["test"])
-
     parser.add_argument('--max_num_workers', required=False,
                         help='number of worker to load data (default: 4)',
                         default=4, type=int)

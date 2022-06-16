@@ -12,3 +12,12 @@ england_epl/2016-2017/2016-10-29 - 17-00 Tottenham 1 - 1 Leicester/1_HQ
 england_epl/2016-2017/2017-01-15 - 19-00 Manchester United 1 - 1 Liverpool/1_HQ
 europe_uefa-champions-league/2014-2015/2015-05-12 - 21-45 Bayern Munich 3 - 2 Barcelona/1_HQ
 europe_uefa-champions-league/2015-2016/2015-09-16 - 21-45 Chelsea 4 - 0 Maccabi Tel Aviv/1_HQ
+europe_uefa-champions-league/2015-2016/2015-09-15 - 21-45 Galatasaray 0 - 2 Atl. Madrid/1_HQ
+europe_uefa-champions-league/2015-2016/2015-09-15 - 21-45 Manchester City 1 - 2 Juventus/1_HQ
+europe_uefa-champions-league/2015-2016/2015-09-15 - 21-45 Sevilla 3 - 0 B. Monchengladbach/1_HQ
+europe_uefa-champions-league/2015-2016/2015-09-16 - 21-45 Dyn. Kiev 2 - 2 FC Porto/1_HQ
+europe_uefa-champions-league/2015-2016/2015-09-29 - 21-45 FC Porto 2 - 1 Chelsea/1_HQ
+europe_uefa-champions-league/2015-2016/2015-09-29 - 21-45 Lyon 0 - 1 Valencia/1_HQ
+europe_uefa-champions-league/2015-2016/2015-11-03 - 22-45 Benfica 2 - 1 Galatasaray/1_HQ
+france_ligue-1/2016-2017/2017-03-04 - 19-00 Paris SG 1 - 0 Nancy/1_HQ
+france_ligue-1/2016-2017/2017-04-30 - 22-00 Nice 3 - 1 Paris SG/1_HQ
