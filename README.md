@@ -8,4 +8,4 @@ The main files are:
 - train.py
 - util.py
 
-The other files and the notewooks are for tests, analysis and investigations:)
+The other files and the notebooks are for tests, analysis and investigations:)
