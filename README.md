@@ -1,4 +1,4 @@
-# TFG
+# Football Action Classification using Face Emotion Features
 
 The main files are:
 - detect_faces.py
